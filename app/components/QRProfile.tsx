@@ -1,15 +1,17 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 
-type Props = { value: string; onClick?: () => void };
+type Props = { value: string };
 
-export default function QRProfile({ value, onClick }: Props) {
+export default function QRProfile({ value }: Props) {
+  const router = useRouter();
   return (
     <button
       type="button"
       className="qrClickTarget"
-      onClick={() => onClick?.()}
+      onClick={() => router.push("/edit")}
       aria-label="Open edit page"
     >
       <div className="qrWrap">

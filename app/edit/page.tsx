@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import EditLinksForm from "@/app/components/EditLinksForm";
+import AuthPanel from "@/app/components/AuthPanel";
 
 export default function EditPage() {
   const router = useRouter();
@@ -19,6 +20,14 @@ export default function EditPage() {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  function refetchUser() {
+    if (!supabase) return;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id ?? null);
+      setAuthError(null);
+    });
+  }
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false);
@@ -29,21 +38,25 @@ export default function EditPage() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (cancelled) return;
-        if (!user) {
-          setLoading(false);
-          router.replace("/auth?next=/edit");
-          return;
-        }
-        setUserId(user.id);
+        setUserId(user?.id ?? null);
       } catch (err) {
-        if (cancelled) return;
-        setAuthError(err instanceof Error ? err.message : "Something went wrong.");
+        if (!cancelled) {
+          setAuthError(err instanceof Error ? err.message : "Something went wrong.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [router, supabase]);
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!supabase) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      refetchUser();
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const supabaseMissing = supabase === null;
 
@@ -57,26 +70,13 @@ export default function EditPage() {
     );
   }
 
-  if (!supabaseMissing && !userId && !authError) {
+  if (supabaseMissing && authError) {
     return (
       <main className="edit-page">
         <div className="edit-inner">
-          <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: 16 }}>Redirecting to sign in…</p>
-          <Link href="/auth" className="edit-back">Go to sign in</Link>
-        </div>
-      </main>
-    );
-  }
-
-  if (!supabaseMissing && authError) {
-    return (
-      <main className="edit-page">
-        <div className="edit-inner">
-          <p style={{ color: "rgba(255,255,255,0.9)", marginBottom: 8 }}>Could not load session</p>
+          <p style={{ color: "rgba(255,255,255,0.9)", marginBottom: 8 }}>Could not load</p>
           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 16 }}>{authError}</p>
-          <Link href="/auth" className="edit-back">Sign in</Link>
-          <span style={{ margin: "0 8px" }}>·</span>
-          <Link href="/" className="edit-back">Back to home</Link>
+          <Link href="/" className="edit-back">← Back to home</Link>
         </div>
       </main>
     );
@@ -94,6 +94,12 @@ export default function EditPage() {
           <EditLinksForm
             userId={userId}
             supabase={supabase}
+            onBack={() => router.push("/")}
+          />
+        ) : supabase ? (
+          <AuthPanel
+            supabase={supabase}
+            onAuthed={refetchUser}
             onBack={() => router.push("/")}
           />
         ) : !supabaseMissing ? null : (

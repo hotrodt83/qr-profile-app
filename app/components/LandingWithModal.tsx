@@ -10,7 +10,8 @@ type Props = {
   qrValue: string;
 };
 
-export default function LandingWithModal({ qrValue }: Props) {
+export default function LandingWithModal({ qrValue: qrValueProp }: Props) {
+  const qrValue = qrValueProp && qrValueProp.trim() !== "" ? qrValueProp : "http://localhost:3001/";
   const [modalOpen, setModalOpen] = useState(false);
   const [session, setSession] = useState<{ user: { id: string } } | null>(null);
 
@@ -57,7 +58,7 @@ export default function LandingWithModal({ qrValue }: Props) {
             <FloatingSocialIcons />
           </div>
           <div className="qrCenter">
-            <QRProfile value={qrValue} onClick={() => setModalOpen(true)} />
+            <QRProfile value={qrValue} />
           </div>
         </div>
       </main>
