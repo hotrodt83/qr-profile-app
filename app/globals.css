@@ -685,3 +685,194 @@ body {
 .authTip span {
   color: rgba(255, 255, 255, 0.7);
 }
+
+
+/* ===== PUBLIC PROFILE /u/[username] ===== */
+.publicProfileShell {
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: linear-gradient(180deg, #0a0a0f 0%, #0d0d14 40%, #0a0a0f 100%);
+  color: #fff;
+}
+
+.publicProfileCard {
+  width: min(420px, 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  padding: 28px 24px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.publicProfileCard--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.publicProfileSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(0, 255, 255, 0.2);
+  border-top-color: rgba(0, 255, 255, 0.9);
+  border-radius: 50%;
+  animation: publicProfileSpin 0.8s linear infinite;
+}
+
+@keyframes publicProfileSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.publicProfileLoadingText {
+  margin: 0;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.publicProfileQRWrap {
+  display: inline-flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.publicProfileQRInner {
+  width: 200px;
+  height: 200px;
+  border-radius: 16px;
+  background: #fff;
+  padding: 12px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.publicProfileQRInner svg {
+  display: block;
+}
+
+.publicProfileTitle {
+  margin: 0 0 4px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.publicProfileHandle {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.publicProfileBio {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.publicProfileEmptyMessage {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.publicProfileLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.publicProfileLinkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 0.9rem;
+}
+
+.publicProfileLinkItem--disabled {
+  opacity: 0.7;
+}
+
+.publicProfileLinkIcon {
+  display: grid;
+  place-items: center;
+  color: rgba(0, 255, 255, 0.7);
+}
+
+.publicProfileLinkPlaceholder {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.publicProfileActions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.publicProfileCTAs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.publicProfileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s, color 0.2s;
+}
+
+.publicProfileBtn--primary {
+  background: rgba(0, 255, 255, 0.2);
+  color: #fff;
+  border: 1px solid rgba(0, 255, 255, 0.4);
+}
+
+.publicProfileBtn--primary:hover {
+  background: rgba(0, 255, 255, 0.28);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+.publicProfileBtn--secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.publicProfileBtn--secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.publicProfileBtn--ghost {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.publicProfileBtn--ghost:hover {
+  color: rgba(255, 255, 255, 0.95);
+}

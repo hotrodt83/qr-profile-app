@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -12,6 +12,22 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">(modeParam === "signup" ? "signup" : "signin");
 
   const supabase = useMemo(() => createClient(), []);
+
+  // After email confirmation, Supabase redirects here with hash; recover session and redirect to next
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.location.hash) return;
+    const redirectIfSession = (session: unknown) => {
+      if (session) {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+        router.replace(next);
+      }
+    };
+    supabase.auth.getSession().then(({ data: { session } }) => redirectIfSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      redirectIfSession(session);
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase.auth, next, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +41,12 @@ export default function AuthPage() {
 
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth?next=${encodeURIComponent(next)}` : undefined;
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+        });
         if (error) throw error;
         setMsg("Account created. Check email if confirmation is enabled, then sign in.");
       } else {

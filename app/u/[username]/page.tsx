@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
+import { getBaseUrl } from "@/lib/getBaseUrl";
+import PublicProfileClient from "./PublicProfileClient";
+import type { Metadata } from "next";
 
 type Props = { params: Promise<{ username: string }> };
 
@@ -10,14 +13,51 @@ type PublicProfile = {
   bio: string | null;
 };
 
+function getPublicUrl(username: string): string {
+  const base = getBaseUrl();
+  return `${base}/u/${encodeURIComponent(username)}`;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params;
+  const supabase = createServerClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("display_name, username, bio")
+    .eq("username", username.trim())
+    .maybeSingle();
+  const profile = data as PublicProfile | null;
+  const title = profile?.display_name || profile?.username || username;
+  const description = profile?.bio || `QR profile for @${username}`;
+  const url = getPublicUrl(username);
+
+  return {
+    title: `${title} | QR Profile`,
+    description: description.slice(0, 160),
+    openGraph: {
+      title: `${title} | QR Profile`,
+      description: description.slice(0, 160),
+      url,
+      siteName: "QR Profile",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | QR Profile`,
+      description: description.slice(0, 160),
+    },
+  };
+}
+
 export default async function PublicProfilePage({ params }: Props) {
   const { username } = await params;
-  if (!username?.trim()) {
+  const trimmed = username?.trim() || "";
+
+  if (!trimmed) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-black text-white">
-        <div className="max-w-md w-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-          <div className="text-2xl font-semibold">Invalid link</div>
-          <Link href="/" className="mt-4 inline-block text-cyan-300 hover:underline">Go home</Link>
+      <div className="publicProfileShell">
+        <div className="publicProfileCard">
+          <h1 className="publicProfileTitle">Invalid link</h1>
+          <Link href="/" className="publicProfileBtn publicProfileBtn--primary">Back to home</Link>
         </div>
       </div>
     );
@@ -27,7 +67,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const { data, error } = await supabase
     .from("profiles")
     .select("id, username, display_name, bio")
-    .eq("username", username.trim())
+    .eq("username", trimmed)
     .maybeSingle();
   const profile = data as PublicProfile | null;
 
@@ -35,32 +75,13 @@ export default async function PublicProfilePage({ params }: Props) {
     console.error("[u/[username]] Supabase error:", error.message, error.code);
   }
 
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-black text-white">
-        <div className="max-w-md w-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-          <div className="text-2xl font-semibold">Profile not found</div>
-          <div className="mt-2 text-white/70">
-            This QR link is invalid or the profile was removed.
-          </div>
-          <Link href="/" className="mt-4 inline-block text-cyan-300 hover:underline">Go home</Link>
-        </div>
-      </div>
-    );
-  }
+  const publicUrl = getPublicUrl(trimmed);
 
-  // If found → show profile
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white p-6">
-      <div className="max-w-md w-full rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
-        <h1 className="text-3xl font-bold">{profile.display_name || profile.username || "Profile"}</h1>
-
-        {profile.username && <p className="mt-2 text-white/70">@{profile.username}</p>}
-
-        {profile.bio && (
-          <p className="mt-4 text-white/80">{profile.bio}</p>
-        )}
-      </div>
-    </div>
+    <PublicProfileClient
+      profile={error ? null : profile}
+      username={trimmed}
+      publicUrl={publicUrl}
+    />
   );
 }
