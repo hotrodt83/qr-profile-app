@@ -16,12 +16,14 @@ type Props = {
   profile: PublicProfileData;
   username: string;
   publicUrl: string;
+  /** When true, show "Invalid link" and QR points to publicUrl (e.g. home). */
+  invalidLink?: boolean;
 };
 
-export default function PublicProfileClient({ profile, username, publicUrl }: Props) {
+export default function PublicProfileClient({ profile, username, publicUrl, invalidLink }: Props) {
   const qrRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
-  const isEmpty = !profile;
+  const isEmpty = !profile || invalidLink;
 
   const copyLink = useCallback(() => {
     navigator.clipboard.writeText(publicUrl).then(() => {
@@ -43,15 +45,16 @@ export default function PublicProfileClient({ profile, username, publicUrl }: Pr
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
       const a = document.createElement("a");
-      a.download = `qr-${username}.png`;
+      a.download = downloadFilename;
       a.href = canvas.toDataURL("image/png");
       a.click();
     };
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-  }, [username]);
+  }, [invalidLink, username]);
 
-  const displayName = profile?.display_name || profile?.username || username || "Profile";
-  const handle = profile?.username || username;
+  const downloadFilename = invalidLink ? "qr-home.png" : `qr-${username}.png`;
+  const displayName = invalidLink ? "Invalid link" : (profile?.display_name || profile?.username || username || "Profile");
+  const handle = invalidLink ? undefined : (profile?.username || username);
 
   return (
     <div className="publicProfileShell">
@@ -68,15 +71,15 @@ export default function PublicProfileClient({ profile, username, publicUrl }: Pr
         {handle && <p className="publicProfileHandle">@{handle}</p>}
 
         {/* Bio or empty state message */}
-        {profile?.bio ? (
+        {!invalidLink && profile?.bio ? (
           <p className="publicProfileBio">{profile.bio}</p>
         ) : isEmpty ? (
-          <p className="publicProfileEmptyMessage">Profile coming soon</p>
+          <p className="publicProfileEmptyMessage">{invalidLink ? "This link isn’t valid. Use the QR to go home or create your profile." : "Profile coming soon"}</p>
         ) : null}
 
-        {/* Placeholder links (empty state) or future: real links */}
+        {/* Placeholder links (empty state only; hide for invalid link) */}
         <div className="publicProfileLinks">
-          {isEmpty
+          {isEmpty && !invalidLink
             ? EDIT_FIELDS.slice(0, 6).map(({ key, label, Icon }) => (
               <div key={key} className="publicProfileLinkItem publicProfileLinkItem--disabled">
                 <span className="publicProfileLinkIcon"><Icon size={20} /></span>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 import PublicProfileClient from "./PublicProfileClient";
@@ -53,13 +52,14 @@ export default async function PublicProfilePage({ params }: Props) {
   const trimmed = username?.trim() || "";
 
   if (!trimmed) {
+    const homeUrl = getBaseUrl() + "/";
     return (
-      <div className="publicProfileShell">
-        <div className="publicProfileCard">
-          <h1 className="publicProfileTitle">Invalid link</h1>
-          <Link href="/" className="publicProfileBtn publicProfileBtn--primary">Back to home</Link>
-        </div>
-      </div>
+      <PublicProfileClient
+        profile={null}
+        username=""
+        publicUrl={homeUrl}
+        invalidLink
+      />
     );
   }
 
