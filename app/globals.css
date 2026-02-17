@@ -56,10 +56,11 @@ body {
   box-sizing: border-box;
 }
 
-/* QR block: fixed width + auto margins = reliable center (same centerline as title/buttons) */
+/* QR block: fixed width + auto margins; clear spacing below CTAs so it sits lower, no overlap with orbit */
 .landingQRWrap {
   width: 260px;
-  margin: 32px auto 0;
+  margin: 48px auto 0;
+  padding-top: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -191,15 +192,20 @@ body {
   height: 220px;
   border-radius: 50%;
   background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   overflow: hidden;
 }
 
 .qrInner svg {
   display: block;
-  margin: 0 auto;
+  width: 220px;
+  height: 220px;
+  margin: auto;
+  transform: none;
+  position: relative;
+  left: 0;
+  top: 0;
 }
 
 @keyframes holoSweep {
