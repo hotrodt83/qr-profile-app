@@ -1,12 +1,21 @@
 // app/layout.tsx
 import "./globals.css";
 
+const siteDescription =
+  "Create a personal QR profile. Share socials and contact details in one scan.";
+
 export const metadata = {
   title: "SmartQR",
-  description: "Your link in one QR — personal profile page, socials, and contact.",
+  description: siteDescription,
   openGraph: {
     title: "SmartQR",
-    description: "Your link in one QR — personal profile page, socials, and contact.",
+    description: siteDescription,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SmartQR",
+    description: siteDescription,
   },
 };
 

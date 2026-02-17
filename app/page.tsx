@@ -7,18 +7,18 @@ export default function HomePage() {
   const baseUrl = getBaseUrl();
   const demoProfileUrl = `${baseUrl}/u/demo`;
   return (
-    <main className="homeStage">
+    <main className="homeStage" role="main">
       <div className="homeCenter">
         <FloatingSocialIcons />
-        <div className="landingBlock">
-          <QRProfile value={demoProfileUrl} />
+        <div className="landingContainer">
+          <div className="landingQRWrap">
+            <QRProfile value={demoProfileUrl} />
+          </div>
           <h1 className="landingTitle">SmartQR</h1>
-          <p className="landingTagline">
-            Create a personal profile page. Share one link—socials, contact, and more.
-          </p>
+          <p className="landingTagline">Your identity in one scan.</p>
           <div className="landingCTAs">
             <Link href="/auth" className="landingBtn landingBtnPrimary">
-              Create your QR profile
+              Create your SmartQR
             </Link>
             <Link href="/u/demo" className="landingBtn landingBtnSecondary">
               View demo
