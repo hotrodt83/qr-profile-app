@@ -11,9 +11,6 @@ export default function HomePage() {
       <div className="homeCenter">
         <FloatingSocialIcons />
         <div className="landingContainer">
-          <div className="landingQRWrap">
-            <QRProfile value={demoProfileUrl} />
-          </div>
           <h1 className="landingTitle">SmartQR</h1>
           <p className="landingTagline">Your identity in one scan.</p>
           <div className="landingCTAs">
@@ -23,6 +20,9 @@ export default function HomePage() {
             <Link href="/u/demo" className="landingBtn landingBtnSecondary">
               View demo
             </Link>
+          </div>
+          <div className="landingQRWrap">
+            <QRProfile value={demoProfileUrl} />
           </div>
         </div>
       </div>

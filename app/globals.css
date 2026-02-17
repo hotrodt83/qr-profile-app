@@ -43,7 +43,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Single layout container: max-width + auto margins for perfect centering (desktop + mobile) */
+/* Single layout container: title + buttons above, QR below; centered in hero */
 .landingContainer {
   width: 100%;
   max-width: 400px;
@@ -51,6 +51,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   box-sizing: border-box;
 }
@@ -60,11 +61,20 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin: 0 auto 24px;
+  margin: 32px auto 0;
 }
 
-.landingQRWrap .qrClickTarget,
+.landingQRWrap .qrClickTarget {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
 .landingQRWrap .qrWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0 auto;
 }
 
@@ -182,13 +192,15 @@ body {
   height: 220px;
   border-radius: 50%;
   background: #fff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
 .qrInner svg {
   display: block;
+  margin: 0 auto;
 }
 
 @keyframes holoSweep {
