@@ -56,26 +56,31 @@ body {
   box-sizing: border-box;
 }
 
-/* QR block: fixed width + auto margins; clear spacing below CTAs so it sits lower, no overlap with orbit */
-.landingQRWrap {
-  width: 260px;
-  margin: 48px auto 0;
-  padding-top: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+/* Landing: QR + orbit in one stage; orbit anchored to QR, not hero */
+.landingContainer .qrStage {
+  position: relative;
+  width: min(460px, 90vw);
+  height: 460px;
+  margin: 56px auto 0;
+  display: grid;
+  place-items: center;
+  z-index: 1;
 }
 
-.landingQRWrap .qrClickTarget {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.landingContainer .qrOrbit {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.landingQRWrap .qrWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.landingContainer .qrCenter {
+  position: relative;
+  display: grid;
+  place-items: center;
+  z-index: 1;
 }
 
 .landingTitle {
@@ -199,13 +204,7 @@ body {
 
 .qrInner svg {
   display: block;
-  width: 220px;
-  height: 220px;
-  margin: auto;
-  transform: none;
-  position: relative;
-  left: 0;
-  top: 0;
+  margin: 0;
 }
 
 @keyframes holoSweep {
@@ -270,7 +269,8 @@ body {
   pointer-events: none;
 }
 
-.homeStage .iconOrbit {
+/* When orbit is inside .qrOrbit (landing), it's centered on QR stage; no viewport anchoring */
+.landingContainer .qrOrbit .iconOrbit {
   opacity: 0.85;
 }
 
