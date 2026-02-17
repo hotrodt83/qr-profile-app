@@ -25,14 +25,15 @@ body {
    ========================= */
 
 .landingContainer {
+  min-height: 100svh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: clamp(24px, 4vw, 64px);
   text-align: center;
+  padding: clamp(24px, 4vw, 64px);
+  gap: 12px;
   box-sizing: border-box;
   width: 100%;
 }
@@ -54,12 +55,13 @@ body {
 }
 
 .ctaRow {
-  margin-top: 24px;
+  margin-top: 20px;
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  position: static;
 }
 
 @media (max-width: 480px) {
@@ -68,14 +70,13 @@ body {
   }
 }
 
-/* Landing: QR + orbit in one stage; orbit anchored to QR, not hero */
+/* Landing: QR + orbit in one stage; orbit anchored to QR only */
 .landingContainer .qrStage {
+  margin-top: 36px;
   position: relative;
   width: min(460px, 90vw);
   height: 460px;
-  margin-top: 40px;
-  margin-left: auto;
-  margin-right: auto;
+  min-height: 0;
   display: grid;
   place-items: center;
   z-index: 1;
@@ -86,7 +87,6 @@ body {
   inset: 0;
   display: grid;
   place-items: center;
-  z-index: 0;
   pointer-events: none;
 }
 
@@ -94,7 +94,6 @@ body {
   position: relative;
   display: grid;
   place-items: center;
-  z-index: 1;
 }
 
 .landingBtn {
