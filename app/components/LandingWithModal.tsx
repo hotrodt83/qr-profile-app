@@ -58,7 +58,7 @@ export default function LandingWithModal({ qrValue: qrValueProp }: Props) {
             <FloatingSocialIcons />
           </div>
           <div className="qrCenter">
-            <QRProfile value={qrValue} />
+            <QRProfile value={qrValue} onClick={() => setModalOpen(true)} />
           </div>
         </div>
       </main>
