@@ -43,7 +43,7 @@ body {
   box-sizing: border-box;
 }
 
-/* Single layout container: title + buttons above, QR below; centered in hero */
+/* Single centerline column: title, CTAs, and QR share the same vertical axis */
 .landingContainer {
   width: 100%;
   max-width: 400px;
@@ -56,26 +56,25 @@ body {
   box-sizing: border-box;
 }
 
+/* QR block: fixed width + auto margins = reliable center (same centerline as title/buttons) */
 .landingQRWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
+  width: 260px;
   margin: 32px auto 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .landingQRWrap .qrClickTarget {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
 }
 
 .landingQRWrap .qrWrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
 }
 
 .landingTitle {
@@ -254,6 +253,7 @@ body {
   backdrop-filter: blur(8px);
 }
 
+/* Orbit is out of flow so it cannot affect layout or centerline */
 .iconOrbit {
   position: absolute;
   inset: 0;
