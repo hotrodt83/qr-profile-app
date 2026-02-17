@@ -5,17 +5,14 @@ import FloatingSocialIcons from "@/app/components/FloatingSocialIcons";
 
 export default function HomePage() {
   const baseUrl = getBaseUrl();
-  const demoProfileUrl = `${baseUrl}/u/demo`;
+  const qrValue = `${baseUrl}/`;
   return (
     <main className="landingContainer" role="main">
       <h1 className="landingTitle">SmartQR</h1>
       <p className="landingTagline">Your identity in one scan.</p>
       <div className="ctaRow">
-        <Link href="/auth" className="landingBtn landingBtnPrimary">
+        <Link href="/auth?next=/edit" className="landingBtn landingBtnPrimary">
           Create your SmartQR
-        </Link>
-        <Link href="/u/demo" className="landingBtn landingBtnSecondary">
-          View demo
         </Link>
       </div>
       <div className="qrStage">
@@ -23,7 +20,7 @@ export default function HomePage() {
           <FloatingSocialIcons />
         </div>
         <div className="qrCenter">
-          <QRProfile value={demoProfileUrl} />
+          <QRProfile value={qrValue} />
         </div>
       </div>
     </main>

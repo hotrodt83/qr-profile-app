@@ -45,7 +45,7 @@ export default function EditPage() {
         if (cancelled) return;
         if (!user) {
           setLoading(false);
-          router.replace("/auth");
+          router.replace("/auth?next=/edit");
           return;
         }
         setUserId(user.id);
