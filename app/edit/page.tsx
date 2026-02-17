@@ -9,7 +9,7 @@ import type { ProfilesRow } from "@/lib/supabase/database.types";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
 
 function getEmptyForm(): Record<string, string> {
-  const empty: Record<string, string> = { username: "" };
+  const empty: Record<string, string> = { username: "", display_name: "", bio: "" };
   EDIT_FIELDS.forEach(({ key }) => { empty[key] = ""; });
   return empty;
 }
@@ -28,6 +28,8 @@ export default function EditPage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [form, setForm] = useState<Record<string, string>>(getEmptyForm);
+  const [privacy, setPrivacy] = useState({ phone_public: false, email_public: false, whatsapp_public: false });
+  const [emailVerified, setEmailVerified] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function EditPage() {
           return;
         }
         setUserId(user.id);
+        setEmailVerified(!!(user as { email_confirmed_at?: string } | null)?.email_confirmed_at);
         let profile = null;
         try {
           profile = await fetchProfileByUserId(supabase, user.id);
@@ -55,12 +58,21 @@ export default function EditPage() {
         }
         if (cancelled) return;
         if (profile) {
-          const next: Record<string, string> = { username: profile.username != null ? String(profile.username) : "" };
+          const next: Record<string, string> = {
+            username: profile.username != null ? String(profile.username) : "",
+            display_name: profile.display_name != null ? String(profile.display_name) : "",
+            bio: profile.bio != null ? String(profile.bio) : "",
+          };
           EDIT_FIELDS.forEach(({ key }) => {
             const v = profile![key as keyof ProfilesRow];
             next[key] = v != null ? String(v) : "";
           });
           setForm(next);
+          setPrivacy({
+            phone_public: !!profile.phone_public,
+            email_public: !!profile.email_public,
+            whatsapp_public: !!profile.whatsapp_public,
+          });
         } else {
           setForm(getEmptyForm());
         }
@@ -84,10 +96,16 @@ export default function EditPage() {
     setToast(null);
     const payload: ProfilePayload = {
       username: form.username?.trim() || null,
+      display_name: form.display_name?.trim() || null,
+      bio: form.bio?.trim() || null,
+      phone_public: privacy.phone_public,
+      email_public: privacy.email_public,
+      whatsapp_public: privacy.whatsapp_public,
+      email_verified: emailVerified,
     };
     EDIT_FIELDS.forEach(({ key }) => {
       const v = form[key]?.trim();
-      payload[key as keyof ProfilePayload] = v === "" ? null : v;
+      (payload as Record<string, unknown>)[key] = v === "" ? null : v ?? null;
     });
     const { error } = await upsertProfile(supabase!, userId!, payload);
     setSaving(false);
@@ -164,6 +182,36 @@ export default function EditPage() {
                 autoComplete="off"
               />
             </div>
+            <div className="edit-row">
+              <span className="edit-icon" aria-hidden />
+              <label className="edit-label" htmlFor="display_name">
+                Display name
+              </label>
+              <input
+                id="display_name"
+                type="text"
+                placeholder="Name on profile"
+                value={form.display_name ?? ""}
+                onChange={(e) => setForm((prev) => ({ ...prev, display_name: e.target.value }))}
+                className="edit-input"
+                autoComplete="off"
+              />
+            </div>
+            <div className="edit-row">
+              <span className="edit-icon" aria-hidden />
+              <label className="edit-label" htmlFor="bio">
+                Bio
+              </label>
+              <input
+                id="bio"
+                type="text"
+                placeholder="Short bio"
+                value={form.bio ?? ""}
+                onChange={(e) => setForm((prev) => ({ ...prev, bio: e.target.value }))}
+                className="edit-input"
+                autoComplete="off"
+              />
+            </div>
             {EDIT_FIELDS.map(({ key, label, placeholder, Icon }) => (
               <div key={key} className="edit-row">
                 <span className="edit-icon" aria-hidden>
@@ -183,6 +231,34 @@ export default function EditPage() {
                 />
               </div>
             ))}
+          </div>
+
+          <div className="edit-privacy">
+            <p className="edit-privacy-title">Privacy — contact fields are hidden by default. Turn on to show on your public profile (after email verification).</p>
+            <label className="edit-privacy-label">
+              <input
+                type="checkbox"
+                checked={privacy.phone_public}
+                onChange={(e) => setPrivacy((p) => ({ ...p, phone_public: e.target.checked }))}
+              />
+              <span>Show phone</span>
+            </label>
+            <label className="edit-privacy-label">
+              <input
+                type="checkbox"
+                checked={privacy.email_public}
+                onChange={(e) => setPrivacy((p) => ({ ...p, email_public: e.target.checked }))}
+              />
+              <span>Show email</span>
+            </label>
+            <label className="edit-privacy-label">
+              <input
+                type="checkbox"
+                checked={privacy.whatsapp_public}
+                onChange={(e) => setPrivacy((p) => ({ ...p, whatsapp_public: e.target.checked }))}
+              />
+              <span>Show WhatsApp</span>
+            </label>
           </div>
 
           <div className="edit-actions">

@@ -1,6 +1,6 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-/** Profile row (id = auth.users.id). Supports flat link fields + optional display_name/bio. */
+/** Profile row (id = auth.users.id). Supports flat link fields + display/bio + privacy. */
 export type ProfilesRow = {
   id: string
   username: string | null
@@ -17,12 +17,19 @@ export type ProfilesRow = {
   phone: string | null
   x: string | null
   website: string | null
+  phone_public?: boolean | null
+  email_public?: boolean | null
+  whatsapp_public?: boolean | null
+  email_verified?: boolean | null
   updated_at: string
 }
 
 export type ProfilesInsert = {
   id: string
   username?: string | null
+  display_name?: string | null
+  bio?: string | null
+  avatar_url?: string | null
   whatsapp?: string | null
   facebook?: string | null
   instagram?: string | null
@@ -33,11 +40,18 @@ export type ProfilesInsert = {
   phone?: string | null
   x?: string | null
   website?: string | null
+  phone_public?: boolean | null
+  email_public?: boolean | null
+  whatsapp_public?: boolean | null
+  email_verified?: boolean | null
   updated_at?: string
 }
 
 export type ProfilesUpdate = {
   username?: string | null
+  display_name?: string | null
+  bio?: string | null
+  avatar_url?: string | null
   whatsapp?: string | null
   facebook?: string | null
   instagram?: string | null
@@ -48,6 +62,10 @@ export type ProfilesUpdate = {
   phone?: string | null
   x?: string | null
   website?: string | null
+  phone_public?: boolean | null
+  email_public?: boolean | null
+  whatsapp_public?: boolean | null
+  email_verified?: boolean | null
   updated_at?: string
 }
 

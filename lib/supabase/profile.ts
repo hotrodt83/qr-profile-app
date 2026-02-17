@@ -4,10 +4,13 @@ import type { Database, ProfilesRow, ProfilesInsert } from "./database.types"
 export type FlatProfile = ProfilesRow
 
 const PROFILE_COLUMNS =
-  "id,username,whatsapp,facebook,instagram,tiktok,telegram,linkedin,email,phone,x,website,updated_at"
+  "id,username,display_name,bio,avatar_url,whatsapp,facebook,instagram,tiktok,telegram,linkedin,email,phone,x,website,phone_public,email_public,whatsapp_public,email_verified,updated_at"
 
 export type ProfilePayload = {
   username?: string | null
+  display_name?: string | null
+  bio?: string | null
+  avatar_url?: string | null
   whatsapp?: string | null
   facebook?: string | null
   instagram?: string | null
@@ -18,6 +21,10 @@ export type ProfilePayload = {
   phone?: string | null
   x?: string | null
   website?: string | null
+  phone_public?: boolean | null
+  email_public?: boolean | null
+  whatsapp_public?: boolean | null
+  email_verified?: boolean | null
 }
 
 export async function fetchProfileByUserId(

@@ -4,6 +4,8 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import QRCode from "react-qr-code";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
+import { downloadVCard, type VCardInput } from "@/lib/vcard";
+import type { PublicContactFields } from "./page";
 
 export type PublicProfileData = {
   id: string;
@@ -18,9 +20,13 @@ type Props = {
   publicUrl: string;
   /** When true, show "Invalid link" and QR points to publicUrl (e.g. home). */
   invalidLink?: boolean;
+  /** Contact fields to show and include in vCard (only when public + verified). */
+  contactFields?: PublicContactFields;
+  /** Profile URL for vCard. */
+  profileUrl?: string;
 };
 
-export default function PublicProfileClient({ profile, username, publicUrl, invalidLink }: Props) {
+export default function PublicProfileClient({ profile, username, publicUrl, invalidLink, contactFields = {}, profileUrl }: Props) {
   const qrRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const isEmpty = !profile || invalidLink;
@@ -56,6 +62,22 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
   const displayName = invalidLink ? "Invalid link" : (profile?.display_name || profile?.username || username || "Profile");
   const handle = invalidLink ? undefined : (profile?.username || username);
 
+  const hasContactForVCard =
+    contactFields?.phone || contactFields?.email || contactFields?.whatsapp || contactFields?.website;
+  const saveContact = useCallback(() => {
+    const vcardData: VCardInput = {
+      displayName: profile?.display_name || profile?.username || username,
+      username: handle ? `@${handle}` : null,
+      bio: profile?.bio ?? undefined,
+      phone: contactFields?.phone ?? undefined,
+      email: contactFields?.email ?? undefined,
+      whatsapp: contactFields?.whatsapp ?? undefined,
+      website: contactFields?.website ?? undefined,
+      url: profileUrl ?? publicUrl,
+    };
+    downloadVCard(vcardData, `${username || "contact"}.vcf`);
+  }, [profile, username, handle, contactFields, profileUrl, publicUrl]);
+
   return (
     <div className="publicProfileShell">
       <div className="publicProfileCard">
@@ -90,6 +112,36 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
             : null}
         </div>
 
+        {/* Contact links (when public + verified) */}
+        {hasContactForVCard && (
+          <div className="publicProfileLinks">
+            {contactFields?.phone && (
+              <a href={`tel:${contactFields.phone}`} className="publicProfileLinkItem">
+                <span className="publicProfileLinkIcon">📞</span>
+                <span>Phone</span>
+              </a>
+            )}
+            {contactFields?.email && (
+              <a href={`mailto:${contactFields.email}`} className="publicProfileLinkItem">
+                <span className="publicProfileLinkIcon">✉️</span>
+                <span>Email</span>
+              </a>
+            )}
+            {contactFields?.whatsapp && (
+              <a href={`https://wa.me/${contactFields.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="publicProfileLinkItem">
+                <span className="publicProfileLinkIcon">WhatsApp</span>
+                <span>WhatsApp</span>
+              </a>
+            )}
+            {contactFields?.website && (
+              <a href={contactFields.website.startsWith("http") ? contactFields.website : `https://${contactFields.website}`} target="_blank" rel="noopener noreferrer" className="publicProfileLinkItem">
+                <span className="publicProfileLinkIcon">🌐</span>
+                <span>Website</span>
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="publicProfileActions">
           <button type="button" onClick={copyLink} className="publicProfileBtn publicProfileBtn--secondary">
@@ -98,6 +150,11 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
           <button type="button" onClick={downloadQR} className="publicProfileBtn publicProfileBtn--secondary">
             Download QR
           </button>
+          {hasContactForVCard && (
+            <button type="button" onClick={saveContact} className="publicProfileBtn publicProfileBtn--secondary">
+              Save Contact
+            </button>
+          )}
         </div>
 
         {/* CTAs */}
