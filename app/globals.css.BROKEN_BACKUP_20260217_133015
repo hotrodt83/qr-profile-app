@@ -1,0 +1,182 @@
+/* ===== GLOBAL RESET ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: #fff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial,
+    sans-serif;
+}
+
+/* ===== STAGE ===== */
+.homeStage {
+  min-height: 100vh;
+  width: 100%;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+.homeCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 10; /* QR above icons */
+}
+
+/* ===== QR HOLOGRAM ===== */
+.qrWrap {
+  width: 340px;
+  height: 340px;
+  display: grid;
+  place-items: center;
+  perspective: 1100px;
+}
+
+.qrHolo {
+  width: 280px;
+  height: 280px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: qrSpin 10s linear infinite, qrFloat 4.5s ease-in-out infinite;
+}
+
+.qrFace {
+  position: absolute;
+  inset: 0;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 28px rgba(0, 255, 255, 0.18),
+    0 0 70px rgba(140, 0, 255, 0.1);
+  overflow: hidden;
+}
+
+.qrFace::before {
+  content: "";
+  position: absolute;
+  inset: -60%;
+  background: conic-gradient(
+    from 180deg,
+    rgba(0, 255, 255, 0),
+    rgba(0, 255, 255, 0.22),
+    rgba(140, 0, 255, 0.16),
+    rgba(0, 255, 255, 0)
+  );
+  opacity: 0.9;
+  mix-blend-mode: screen;
+  animation: holoSweep 3.2s linear infinite;
+}
+
+.qrInner {
+  position: absolute;
+  inset: 28px;
+  border-radius: 20px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+}
+
+/* ===== FLOATING ICONS (BACKGROUND) ===== */
+.iconLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 1; /* behind QR */
+  pointer-events: none;
+}
+
+HOLOGRAM QR SYSTEM
+   QR fixed center + orbiting icons
+   ========================= */
+
+.qrStage{
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at center, rgba(0,255,255,0.08), transparent 55%);
+}
+
+.qrCenterStack{
+  position: relative;
+  width: 520px;
+  height: 520px;
+  display: grid;
+  place-items: center;
+}
+
+.qrCore{
+  position: relative;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+}
+
+.qrGlass{
+  width: 290px;
+  height: 290px;
+  display: grid;
+  place-items: center;
+  border-radius: 26px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,255,255,0.22);
+  box-shadow:
+    0 0 18px rgba(0,255,255,0.22),
+    0 0 40px rgba(140,0,255,0.16);
+  backdrop-filter: blur(8px);
+}
+
+.iconOrbit{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  animation: orbitSpin 18s linear infinite;
+  pointer-events: none;
+}
+
+.holoIcon{
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,255,255,0.22);
+  box-shadow:
+    0 0 12px rgba(0,255,255,0.22),
+    0 0 26px rgba(140,0,255,0.14);
+  backdrop-filter: blur(6px);
+  opacity: 0.85;
+  animation: iconFloat 5.8s ease-in-out infinite;
+}
+
+.holoSvg{
+  filter: drop-shadow(0 0 10px rgba(0,255,255,0.5));
+  opacity: 0.95;
+}
+
+@keyframes orbitSpin{
+  from{ transform: rotate(0deg); }
+  to{ transform: rotate(360deg); }
+}
+
+@keyframes iconFloat{
+  0%,100%{ transform: translateY(0); }
+  50%{ transform: translateY(-10px); }
+}
+
+@media (max-width: 640px){
+  .qrCenterStack{ width: 360px; height: 360px; }
+  .qrGlass{ width: 250px; height: 250px; }
+}

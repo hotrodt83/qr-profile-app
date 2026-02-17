@@ -1,9 +1,14 @@
-export default function Home() {
+import QRProfile from "@/app/components/QRProfile";
+import FloatingSocialIcons from "@/app/components/FloatingSocialIcons";
+
+export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <h1 className="text-4xl font-bold">
-        My QR Profile System 🚀
-      </h1>
+    <main className="homeStage">
+      <div className="homeCenter">
+        {/* Icons orbit behind the QR (same layer so they’re visible) */}
+        <FloatingSocialIcons />
+        <QRProfile value="http://localhost:3001/u/test" />
+      </div>
     </main>
   );
 }
