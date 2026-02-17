@@ -2,8 +2,12 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "QR App",
-  description: "Personal QR Profile",
+  title: "SmartQR",
+  description: "Your link in one QR — personal profile page, socials, and contact.",
+  openGraph: {
+    title: "SmartQR",
+    description: "Your link in one QR — personal profile page, socials, and contact.",
+  },
 };
 
 export default function RootLayout({

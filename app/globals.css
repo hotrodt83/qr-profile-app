@@ -40,15 +40,20 @@ body {
   justify-content: center;
   z-index: 10;
   padding: 24px;
+  box-sizing: border-box;
 }
 
 .landingBlock {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 20px;
+  width: 100%;
   max-width: 420px;
+  margin: 0 auto;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .landingTitle {
@@ -108,14 +113,17 @@ body {
 }
 
 .qrWrap {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
   perspective: 1100px;
 }
 
 .qrHolo {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 260px;
   height: 260px;
   position: relative;
@@ -131,8 +139,9 @@ body {
   backdrop-filter: blur(10px);
   box-shadow: 0 0 28px rgba(0, 255, 255, 0.18),
     0 0 70px rgba(140, 0, 255, 0.1);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -341,8 +350,10 @@ body {
 .qrClickTarget {
   all: unset;
   cursor: pointer;
-  display: inline-grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
   position: relative;
   z-index: 9999;
 }

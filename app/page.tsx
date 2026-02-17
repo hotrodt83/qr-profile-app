@@ -12,7 +12,7 @@ export default function HomePage() {
         <FloatingSocialIcons />
         <div className="landingBlock">
           <QRProfile value={demoProfileUrl} />
-          <h1 className="landingTitle">Your link in one QR</h1>
+          <h1 className="landingTitle">SmartQR</h1>
           <p className="landingTagline">
             Create a personal profile page. Share one link—socials, contact, and more.
           </p>
