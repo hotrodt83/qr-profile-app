@@ -21,39 +21,51 @@ body {
 }
 
 /* =========================
-   HOME STAGE + QR
+   LANDING HERO (one centered vertical stack)
    ========================= */
 
-.homeStage {
-  min-height: 100dvh;
-  width: 100%;
-  position: relative;
-  overflow: hidden;
-}
-
-.homeCenter {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  padding: 24px 20px;
-  box-sizing: border-box;
-}
-
-/* Single centerline column: title, CTAs, and QR share the same vertical axis */
 .landingContainer {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(24px, 4vw, 64px);
   text-align: center;
   box-sizing: border-box;
+  width: 100%;
+}
+
+.landingTitle {
+  margin: 0 0 8px;
+  font-size: clamp(1.875rem, 5vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: #fff;
+}
+
+.landingTagline {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.ctaRow {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 480px) {
+  .ctaRow {
+    flex-direction: column;
+  }
 }
 
 /* Landing: QR + orbit in one stage; orbit anchored to QR, not hero */
@@ -61,7 +73,9 @@ body {
   position: relative;
   width: min(460px, 90vw);
   height: 460px;
-  margin: 56px auto 0;
+  margin-top: 40px;
+  margin-left: auto;
+  margin-right: auto;
   display: grid;
   place-items: center;
   z-index: 1;
@@ -81,30 +95,6 @@ body {
   display: grid;
   place-items: center;
   z-index: 1;
-}
-
-.landingTitle {
-  margin: 0 0 8px;
-  font-size: clamp(1.875rem, 5vw, 2.5rem);
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  line-height: 1.15;
-  color: #fff;
-}
-
-.landingTagline {
-  margin: 0 0 28px;
-  font-size: 1.0625rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.landingCTAs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  align-items: center;
 }
 
 .landingBtn {
