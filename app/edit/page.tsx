@@ -62,8 +62,8 @@ export default function EditPage() {
 
   if (loading) {
     return (
-      <main className="edit-page">
-        <div className="edit-inner">
+      <main className="min-h-screen w-full bg-black flex justify-center overflow-x-hidden">
+        <div className="w-full max-w-3xl px-4 py-12">
           <p style={{ color: "rgba(255,255,255,0.7)" }}>Loading…</p>
         </div>
       </main>
@@ -72,8 +72,8 @@ export default function EditPage() {
 
   if (supabaseMissing && authError) {
     return (
-      <main className="edit-page">
-        <div className="edit-inner">
+      <main className="min-h-screen w-full bg-black flex justify-center overflow-x-hidden">
+        <div className="w-full max-w-3xl px-4 py-12">
           <p style={{ color: "rgba(255,255,255,0.9)", marginBottom: 8 }}>Could not load</p>
           <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, marginBottom: 16 }}>{authError}</p>
           <Link href="/" className="edit-back">← Back to home</Link>
@@ -83,8 +83,8 @@ export default function EditPage() {
   }
 
   return (
-    <main className="edit-page">
-      <div className="edit-inner">
+    <main className="min-h-screen w-full bg-black flex justify-center overflow-x-hidden">
+      <div className="w-full max-w-3xl px-4 py-12">
         {supabaseMissing && (
           <div className="edit-banner" role="alert">
             <strong>Supabase not configured.</strong> Copy <code>.env.example</code> to <code>.env.local</code> and add your <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to sign in and save.

@@ -4,14 +4,29 @@ import { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+const SAFE_NEXT_PATHS = ["/", "/edit", "/dashboard"];
+function sanitizeNext(raw: string | null): string {
+  const path = (raw || "/edit").split("?")[0];
+  if (SAFE_NEXT_PATHS.includes(path)) return path;
+  if (path.startsWith("/edit")) return "/edit";
+  return "/edit";
+}
+
 export default function AuthPage() {
   const router = useRouter();
   const sp = useSearchParams();
-  const next = sp.get("next") || "/edit";
+  const next = sanitizeNext(sp.get("next"));
   const modeParam = sp.get("mode");
   const [mode, setMode] = useState<"signin" | "signup">(modeParam === "signup" ? "signup" : "signin");
 
   const supabase = useMemo(() => createClient(), []);
+
+  // If already logged in, go straight to next (e.g. /edit)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace(next);
+    });
+  }, [supabase.auth, next, router]);
 
   // After email confirmation, Supabase redirects here with hash; recover session and redirect to next
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { fetchProfileByUsername } from "@/lib/supabase/profile";
 import { getProfileLink } from "@/lib/links";
 import type { PlatformKey } from "@/lib/platforms";
@@ -16,6 +16,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export default async function PublicProfilePage({ params }: Props) {
   const { slug } = await params;
+  if (!isSupabaseConfigured()) notFound();
   const supabase = createServerClient();
   const profile = await fetchProfileByUsername(supabase, slug);
 

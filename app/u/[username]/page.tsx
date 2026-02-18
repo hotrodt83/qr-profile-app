@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 import PublicProfileClient from "./PublicProfileClient";
 import type { Metadata } from "next";
@@ -36,6 +36,17 @@ function getPublicUrl(username: string): string {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
   const trimmed = (username ?? "").trim();
+  if (!isSupabaseConfigured()) {
+    const title = trimmed || "Profile";
+    const description = trimmed ? `QR profile for @${trimmed}` : "QR profile";
+    const url = trimmed ? getPublicUrl(trimmed) : "";
+    return {
+      title: `${title} | QR Profile`,
+      description: description.slice(0, 160),
+      openGraph: { title: `${title} | QR Profile`, description: description.slice(0, 160), url, siteName: "QR Profile" },
+      twitter: { card: "summary_large_image", title: `${title} | QR Profile`, description: description.slice(0, 160) },
+    };
+  }
   const supabase = createServerClient();
   const { data } = await supabase
     .from("profiles")
@@ -76,6 +87,18 @@ export default async function PublicProfilePage({ params }: Props) {
         username=""
         publicUrl={homeUrl}
         invalidLink
+      />
+    );
+  }
+
+  if (!isSupabaseConfigured()) {
+    return (
+      <PublicProfileClient
+        profile={null}
+        username={trimmed}
+        publicUrl={getPublicUrl(trimmed)}
+        contactFields={{}}
+        profileUrl={getPublicUrl(trimmed)}
       />
     );
   }

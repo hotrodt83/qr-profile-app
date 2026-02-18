@@ -8,10 +8,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 export function createBrowserClient() {
   if (!supabaseUrl || !supabaseAnonKey) {
-    if (typeof window === 'undefined') {
-      return createSupabaseClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
-    }
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    // Return placeholder on both server and client so the app never crashes (no white screen).
+    // AuthPanel shows "Sign-in is not configured" when supabase is the placeholder.
+    return createSupabaseClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
   }
   return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
 }

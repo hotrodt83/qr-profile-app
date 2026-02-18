@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { fetchProfileByUserId, upsertProfile, type ProfilePayload } from "@/lib/supabase/profile";
-import type { ProfilesRow } from "@/lib/supabase/database.types";
+import type { Database, ProfilesRow } from "@/lib/supabase/database.types";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
 
 function getEmptyForm(): Record<string, string> {
@@ -14,7 +15,7 @@ function getEmptyForm(): Record<string, string> {
 
 type Props = {
   userId: string;
-  supabase: ReturnType<typeof createBrowserClient>;
+  supabase: SupabaseClient<Database>;
   onBack?: () => void;
 };
 

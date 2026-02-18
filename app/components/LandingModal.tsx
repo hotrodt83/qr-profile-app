@@ -41,32 +41,38 @@ export default function LandingModal({
 
   if (!open) return null;
 
+  const children =
+    isAuthed && userId && supabase ? (
+      <EditLinksForm userId={userId} supabase={supabase} onBack={onClose} />
+    ) : isAuthed ? (
+      <div className="edit-inner">
+        <p style={{ color: "rgba(255,255,255,0.7)" }}>Loading…</p>
+      </div>
+    ) : (
+      <AuthPanel supabase={supabase} onAuthed={onAuthed} onBack={onClose} />
+    );
+
   return (
     <div
-      className="landingModalOverlay"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={handleOverlayClick}
       role="dialog"
       aria-modal="true"
       aria-label="Sign in or edit links"
     >
-      <div className="landingModalPanel" ref={panelRef}>
+      <div
+        ref={panelRef}
+        className="relative w-full max-w-lg mx-4 bg-[#0f0f0f] rounded-2xl border border-white/10 shadow-2xl p-6"
+      >
         <button
           type="button"
-          className="landingModalClose"
           onClick={onClose}
+          className="absolute top-4 right-4 text-white/60 hover:text-white"
           aria-label="Close"
         >
-          ×
+          ✕
         </button>
-        {isAuthed && userId && supabase ? (
-          <EditLinksForm userId={userId} supabase={supabase} onBack={onClose} />
-        ) : isAuthed ? (
-          <div className="edit-inner">
-            <p style={{ color: "rgba(255,255,255,0.7)" }}>Loading…</p>
-          </div>
-        ) : (
-          <AuthPanel onAuthed={onAuthed} onBack={onClose} />
-        )}
+        {children}
       </div>
     </div>
   );
