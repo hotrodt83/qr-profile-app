@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import QRProfile from "@/app/components/QRProfile";
@@ -45,20 +46,16 @@ export default function LandingWithModal({ qrValue: qrValueProp }: Props) {
         <h1 className="landingTitle">SmartQR</h1>
         <p className="landingTagline">Your identity in one scan.</p>
         <div className="ctaRow">
-          <button
-            type="button"
-            className="landingBtn landingBtnPrimary"
-            onClick={() => setModalOpen(true)}
-          >
+          <Link href="/edit" className="landingBtn landingBtnPrimary">
             Create your SmartQR
-          </button>
+          </Link>
         </div>
         <div className="qrStage">
           <div className="qrOrbit">
             <FloatingSocialIcons />
           </div>
-          <div className="qrCenter">
-            <QRProfile value={qrValue} onClick={() => setModalOpen(true)} />
+          <div className="qrCenter relative z-10">
+            <QRProfile value={qrValue} />
           </div>
         </div>
       </main>
