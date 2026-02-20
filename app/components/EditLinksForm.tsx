@@ -632,9 +632,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       <header className="edit-header">
         {!isGuest && userId && (
           <div className="edit-avatar-wrap">
-            <p style={{ color: "#0ff", fontSize: 12, marginBottom: 8, textAlign: "center" }}>
-              AVATAR UPLOAD SECTION
-            </p>
             {loading ? (
               <div
                 className="edit-avatar-btn"

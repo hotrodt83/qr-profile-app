@@ -201,7 +201,7 @@ export async function updateAvatarUrl(
 export async function ensureProfileExists(
   supabase: SupabaseClient<Database>,
   userId: string,
-  email?: string | null
+  _email?: string | null
 ): Promise<{ data: ProfilesRow | null; error: unknown }> {
   const result = await fetchProfileByUserId(supabase, userId)
   if (result.data) {
@@ -210,11 +210,11 @@ export async function ensureProfileExists(
   if (result.error) {
     return { data: null, error: result.error }
   }
-  const usernameFromEmail = email?.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 30) || null
   const minimalRow: ProfilesInsert = {
     id: userId,
-    username: usernameFromEmail,
-    display_name: usernameFromEmail,
+    username: null,
+    display_name: null,
+    bio: null,
     avatar_url: null,
     updated_at: new Date().toISOString(),
   }
