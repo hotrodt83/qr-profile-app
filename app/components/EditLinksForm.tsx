@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createBrowserClient } from "@/lib/supabase/client";
-import { fetchProfileByUserId, upsertProfile, updateAvatarUrl, validateProfilePayload, type ProfilePayload } from "@/lib/supabase/profile";
+import { fetchProfileByUserId, upsertProfile, updateAvatarUrl, validateProfilePayload, ensureProfileExists, type ProfilePayload } from "@/lib/supabase/profile";
 import type { Database, ProfilesRow } from "@/lib/supabase/database.types";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
 import { parsePhone, formatFullPhone } from "@/lib/countryCodes";
@@ -146,18 +146,20 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           return;
         }
         setEmailVerified(!!(user as { email_confirmed_at?: string } | null)?.email_confirmed_at);
-        const result = await fetchProfileByUserId(supabase, userId);
+        
+        // Ensure profile row exists (creates with minimal defaults if missing)
+        const ensureResult = await ensureProfileExists(supabase, userId, user.email);
         if (cancelled) return;
-        if (result.error) {
-          const err = result.error as { message?: string };
+        if (ensureResult.error) {
+          const err = ensureResult.error as { message?: string };
           const errMsg =
-            result.error instanceof Error
-              ? result.error.message
+            ensureResult.error instanceof Error
+              ? ensureResult.error.message
               : typeof err?.message === "string" && err.message
                 ? err.message
                 : "Failed to load profile";
           if (process.env.NODE_ENV === "development") {
-            console.error("[EditLinksForm] fetch profile error:", result.error);
+            console.error("[EditLinksForm] ensure profile error:", ensureResult.error);
           }
           setLoadError(errMsg);
           const draft = persistDraft ? loadCreateDraft() : null;
@@ -166,7 +168,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           setLoading(false);
           return;
         }
-        const profile = result.data;
+        const profile = ensureResult.data;
         if (profile) {
           setAvatarUrl(profile.avatar_url ?? null);
           const next: Record<string, string> = {
@@ -630,29 +632,43 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       <header className="edit-header">
         {!isGuest && userId && (
           <div className="edit-avatar-wrap">
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              className="edit-avatar-input"
-              aria-label="Upload profile photo"
-            />
-            <button
-              type="button"
-              onClick={() => { setAvatarError(null); avatarInputRef.current?.click(); }}
-              disabled={avatarUploading}
-              className="edit-avatar-btn"
-              aria-label="Change profile photo"
-            >
-              {avatarUploading ? (
-                <span className="edit-avatar-placeholder">…</span>
-              ) : avatarUrl ? (
-                <img src={avatarUrl} alt="" className="edit-avatar-img" />
-              ) : (
-                <span className="edit-avatar-placeholder">+ Photo</span>
-              )}
-            </button>
+            <p style={{ color: "#0ff", fontSize: 12, marginBottom: 8, textAlign: "center" }}>
+              AVATAR UPLOAD SECTION
+            </p>
+            {loading ? (
+              <div
+                className="edit-avatar-btn"
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <span className="edit-avatar-placeholder">Loading…</span>
+              </div>
+            ) : (
+              <>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="edit-avatar-input"
+                  aria-label="Upload profile photo"
+                />
+                <button
+                  type="button"
+                  onClick={() => { setAvatarError(null); avatarInputRef.current?.click(); }}
+                  disabled={avatarUploading}
+                  className="edit-avatar-btn"
+                  aria-label="Change profile photo"
+                >
+                  {avatarUploading ? (
+                    <span className="edit-avatar-placeholder">…</span>
+                  ) : avatarUrl ? (
+                    <img src={avatarUrl} alt="" className="edit-avatar-img" />
+                  ) : (
+                    <span className="edit-avatar-placeholder">+ Photo</span>
+                  )}
+                </button>
+              </>
+            )}
             {avatarError && (
               <p className="edit-avatar-error" role="alert">{avatarError}</p>
             )}

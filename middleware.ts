@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const RATE_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_MAX = 60; // max requests per window per IP for /u/*
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX = 60;
 
 type Entry = { count: number; resetAt: number };
 
@@ -33,29 +33,99 @@ function isRateLimited(id: string): boolean {
   return false;
 }
 
-// Allow public access to landing, create, edit, share, and auth pages
-const publicRoutes = ["/", "/create", "/edit", "/share", "/auth/email", "/verify"];
+const PROTECTED_ROUTES = ["/edit", "/dashboard"];
+const AUTH_ROUTE = "/auth/email";
+const STEPUP_COOKIE = "smartqr_stepup";
+
+function hasSupabaseSession(req: NextRequest): boolean {
+  const allCookies = req.cookies.getAll();
+  for (const cookie of allCookies) {
+    if (cookie.name.includes("sb-") && cookie.name.includes("-auth-token")) {
+      try {
+        const value = cookie.value;
+        if (value && value.length > 10) {
+          return true;
+        }
+      } catch {
+        continue;
+      }
+    }
+  }
+  return false;
+}
+
+function isStepUpVerified(req: NextRequest): boolean {
+  const stepupCookie = req.cookies.get(STEPUP_COOKIE);
+  if (!stepupCookie?.value) return false;
+  const ts = parseInt(stepupCookie.value, 10);
+  if (isNaN(ts)) return stepupCookie.value === "1";
+  return Date.now() < ts;
+}
+
+function isProtectedRoute(path: string): boolean {
+  return PROTECTED_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+}
 
 export function middleware(request: NextRequest) {
-  // Never redirect away when user is in face enroll flow
   if (request.nextUrl.searchParams.get("enroll") === "face") {
-    console.log("[MW] bypass enroll=face");
     return NextResponse.next();
   }
+
   const path = request.nextUrl.pathname;
-  if (publicRoutes.includes(path) || path.startsWith("/auth/") || path.startsWith("/verify")) {
+
+  if (isProtectedRoute(path)) {
+    const isAuthed = hasSupabaseSession(request);
+
+    if (!isAuthed) {
+      const url = request.nextUrl.clone();
+      url.pathname = AUTH_ROUTE;
+      url.searchParams.set("next", path);
+      return NextResponse.redirect(url);
+    }
+
+    if (!isStepUpVerified(request)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/secure";
+      url.searchParams.set("next", path);
+      return NextResponse.redirect(url);
+    }
+
     return NextResponse.next();
   }
+
+  if (
+    path === "/" ||
+    path === "/create" ||
+    path === "/share" ||
+    path.startsWith("/auth/") ||
+    path.startsWith("/verify") ||
+    path.startsWith("/secure")
+  ) {
+    return NextResponse.next();
+  }
+
   if (!path.startsWith("/u/")) {
     return NextResponse.next();
   }
+
   const clientId = getClientId(request);
   if (isRateLimited(clientId)) {
     return new NextResponse("Too Many Requests", { status: 429 });
   }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/create", "/edit", "/share", "/verify", "/auth/:path*", "/u/:path*"],
+  matcher: [
+    "/",
+    "/create",
+    "/edit/:path*",
+    "/dashboard/:path*",
+    "/share",
+    "/verify/:path*",
+    "/auth/:path*",
+    "/secure/:path*",
+    "/u/:path*",
+  ],
 };

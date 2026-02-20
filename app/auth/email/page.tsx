@@ -7,6 +7,29 @@ import Link from "next/link";
 
 const SAFE_NEXT = ["/", "/create", "/edit", "/share", "/verify"];
 const RESEND_COOLDOWN_SEC = 60;
+const REF_STORAGE_KEY = "smartqr_ref";
+
+function isValidRef(ref: string): boolean {
+  if (ref.length < 3 || ref.length > 30) return false;
+  return /^[a-zA-Z0-9_]+$/.test(ref);
+}
+
+function getValidRef(ref: string | null): string | null {
+  if (!ref) return null;
+  const cleaned = ref.toLowerCase();
+  if (!isValidRef(cleaned)) return null;
+  return cleaned;
+}
+
+function storeRefParam(ref: string | null): void {
+  const valid = getValidRef(ref);
+  if (!valid) return;
+  try {
+    localStorage.setItem(REF_STORAGE_KEY, valid);
+  } catch {
+    // localStorage not available
+  }
+}
 
 function getNext(sp: { get(key: string): string | null }): string {
   const n = sp.get("next") || "/create";
@@ -28,6 +51,12 @@ export default function EmailAuthPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const next = useMemo(() => getNext(sp), [sp]);
+  const validRef = useMemo(() => getValidRef(sp.get("ref")), [sp]);
+
+  // Store ref param in localStorage on mount
+  useEffect(() => {
+    storeRefParam(validRef);
+  }, [validRef]);
 
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -154,6 +183,11 @@ export default function EmailAuthPage() {
         <header className="authEmailHeader">
           <h1>Email login</h1>
           <p>We’ll send a one-time code to your email. No password.</p>
+          {validRef && (
+            <p className="text-sm text-emerald-400 mt-2">
+              Referred by @{validRef}
+            </p>
+          )}
           {sent && (
             <p className="authEmailHint">
               Check your inbox. If you received a <strong>link</strong> instead of a code, click the link in the email to sign in.

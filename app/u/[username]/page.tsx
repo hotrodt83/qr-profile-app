@@ -1,163 +1,162 @@
-import { createServerClient, isSupabaseConfigured, getPublicAvatarUrl } from "@/lib/supabase/server";
-import { getBaseUrl } from "@/lib/getBaseUrl";
-import PublicProfileClient from "./PublicProfileClient";
-import type { Metadata } from "next";
+import Link from "next/link";
 
-type Props = { params: Promise<{ username: string }> };
-
-type PublicProfile = {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  phone: string | null;
-  email: string | null;
-  whatsapp: string | null;
-  telegram: string | null;
-  instagram: string | null;
-  facebook: string | null;
-  x: string | null;
-  website: string | null;
-  phone_public: boolean | null;
-  email_public: boolean | null;
-  whatsapp_public: boolean | null;
-  telegram_public: boolean | null;
-  instagram_public: boolean | null;
-  facebook_public: boolean | null;
-  x_public: boolean | null;
-  website_public: boolean | null;
-  email_verified: boolean | null;
-};
-
-/** Contact fields to show on public profile and in vCard (only when public + verified). */
-export type PublicContactFields = {
-  phone?: string | null;
-  email?: string | null;
-  whatsapp?: string | null;
-  website?: string | null;
-};
-
-function getPublicUrl(username: string): string {
-  const base = getBaseUrl();
-  return `${base}/u/${encodeURIComponent(username)}`;
-}
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { username } = await params;
-  const trimmed = (username ?? "").trim();
-  if (!isSupabaseConfigured()) {
-    const title = trimmed || "Profile";
-    const description = trimmed ? `SmartQR profile for @${trimmed}` : "SmartQR profile";
-    const url = trimmed ? getPublicUrl(trimmed) : "";
-    return {
-      title: `${title} | SmartQR`,
-      description: description.slice(0, 160),
-      openGraph: { title: `${title} | SmartQR`, description: description.slice(0, 160), url, siteName: "SmartQR" },
-      twitter: { card: "summary_large_image", title: `${title} | SmartQR`, description: description.slice(0, 160) },
-    };
-  }
-  const supabase = createServerClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("display_name, username, bio")
-    .eq("username", trimmed)
-    .maybeSingle();
-  const profile = data as PublicProfile | null;
-  const title = profile?.display_name || profile?.username || trimmed || "Profile";
-  const description = profile?.bio || `SmartQR profile for @${trimmed}`;
-  const url = trimmed ? getPublicUrl(trimmed) : "";
-
-  return {
-    title: `${title} | SmartQR`,
-    description: description.slice(0, 160),
-    openGraph: {
-      title: `${title} | SmartQR`,
-      description: description.slice(0, 160),
-      url,
-      siteName: "SmartQR",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${title} | SmartQR`,
-      description: description.slice(0, 160),
-    },
-  };
-}
-
-export default async function PublicProfilePage({ params }: Props) {
-  const { username } = await params;
-  const trimmed = username?.trim() || "";
-
-  if (!trimmed) {
-    const homeUrl = getBaseUrl() + "/";
-    return (
-      <PublicProfileClient
-        profile={null}
-        username=""
-        publicUrl={homeUrl}
-        invalidLink
-      />
-    );
-  }
-
-  if (!isSupabaseConfigured()) {
-    return (
-      <PublicProfileClient
-        profile={null}
-        username={trimmed}
-        publicUrl={getPublicUrl(trimmed)}
-        profileUrl={getPublicUrl(trimmed)}
-      />
-    );
-  }
-
-  const supabase = createServerClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, bio, avatar_url, phone, email, whatsapp, telegram, instagram, facebook, x, website, phone_public, email_public, whatsapp_public, telegram_public, instagram_public, facebook_public, x_public, website_public, email_verified")
-    .eq("username", trimmed)
-    .maybeSingle();
-  const row = data as PublicProfile | null;
-
-  if (error) {
-    console.error("[u/[username]] Supabase error:", error.message, error.code);
-  }
-
-  const publicUrl = getPublicUrl(trimmed);
-  const resolvedAvatarUrl = row?.avatar_url ? await getPublicAvatarUrl(row.avatar_url) : null;
-  const profileForClient = row
-    ? {
-        id: row.id,
-        username: row.username,
-        display_name: row.display_name,
-        bio: row.bio,
-        avatar_url: resolvedAvatarUrl ?? row.avatar_url,
-        phone: row.phone,
-        email: row.email,
-        whatsapp: row.whatsapp,
-        telegram: row.telegram,
-        instagram: row.instagram,
-        facebook: row.facebook,
-        x: row.x,
-        website: row.website,
-        phone_public: row.phone_public,
-        email_public: row.email_public,
-        whatsapp_public: row.whatsapp_public,
-        telegram_public: row.telegram_public,
-        instagram_public: row.instagram_public,
-        facebook_public: row.facebook_public,
-        x_public: row.x_public,
-        website_public: row.website_public,
-      }
-    : null;
-
+export default function HomePage() {
   return (
-    <PublicProfileClient
-      profile={error ? null : profileForClient}
-      username={trimmed}
-      publicUrl={publicUrl}
-      profileUrl={publicUrl}
-    />
+    <main className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        {/* Top bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-neutral-800 grid place-items-center text-lg font-bold">
+              S
+            </div>
+            <div className="leading-tight">
+              <div className="font-semibold">SmartQR</div>
+              <div className="text-xs text-neutral-400">Public profile + shareable contact links</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/edit"
+              className="rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-2 text-sm hover:bg-neutral-800 transition"
+            >
+              Edit profile
+            </Link>
+            <Link
+              href="/u/demo"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-neutral-950 hover:opacity-90 transition"
+            >
+              View demo
+            </Link>
+          </div>
+        </div>
+
+        {/* Hero */}
+        <section className="mt-14 grid gap-10 md:grid-cols-2 md:items-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+              One link. One QR. <span className="text-neutral-400">Your public identity.</span>
+            </h1>
+
+            <p className="mt-4 text-neutral-300 text-lg leading-relaxed">
+              Share your SmartQR profile anywhere. Show only what you want public: phone, email,
+              WhatsApp, Telegram, Instagram, Facebook, X, and your website.
+            </p>
+
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/edit"
+                className="rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-neutral-950 hover:opacity-90 transition text-center"
+              >
+                Create your SmartQR profile
+              </Link>
+
+              <Link
+                href="/u/demo"
+                className="rounded-2xl border border-neutral-800 bg-neutral-900 px-6 py-3 text-sm hover:bg-neutral-800 transition text-center"
+              >
+                See a public profile
+              </Link>
+            </div>
+
+            <div className="mt-6 text-sm text-neutral-400">
+              Tip: replace <span className="text-neutral-200">/u/demo</span> with your username once
+              you create your profile.
+            </div>
+          </div>
+
+          {/* Preview card */}
+          <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-xl">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-neutral-800 grid place-items-center text-xl font-bold">
+                MJ
+              </div>
+              <div>
+                <div className="font-semibold text-lg">Majd Ismail</div>
+                <div className="text-neutral-400">@mj</div>
+              </div>
+            </div>
+
+            <p className="mt-4 text-neutral-300">
+              Founder mode. Clean public profile + smart contact links.
+            </p>
+
+            <div className="mt-6 grid gap-3">
+              {[
+                { label: "Telegram", value: "@mj" },
+                { label: "Instagram", value: "@mj" },
+                { label: "X", value: "@mj" },
+                { label: "Website", value: "smartqr.app" },
+              ].map((it) => (
+                <div
+                  key={it.label}
+                  className="rounded-2xl bg-neutral-800/60 px-4 py-3 flex items-center justify-between"
+                >
+                  <span className="font-medium">{it.label}</span>
+                  <span className="text-neutral-300">{it.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                className="flex-1 rounded-2xl border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm hover:bg-neutral-800 transition"
+              >
+                Share
+              </button>
+              <button
+                type="button"
+                className="flex-1 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-neutral-950 hover:opacity-90 transition"
+              >
+                Create yours
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Features */}
+        <section className="mt-16 grid gap-4 md:grid-cols-3">
+          {[
+            {
+              title: "Public controls",
+              desc: "Each contact field has a public toggle. Only show what you approve.",
+            },
+            {
+              title: "Instant sharing",
+              desc: "Share your profile link anywhere. Simple, fast, clean.",
+            },
+            {
+              title: "Built for trust",
+              desc: "Minimal public view. No admin tools. Just identity and links.",
+            },
+          ].map((f) => (
+            <div
+              key={f.title}
+              className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6"
+            >
+              <div className="font-semibold">{f.title}</div>
+              <p className="mt-2 text-sm text-neutral-400 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-16 border-t border-neutral-900 pt-8 text-sm text-neutral-500">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div>© {new Date().getFullYear()} SmartQR</div>
+            <div className="flex gap-4">
+              <Link className="hover:text-neutral-200 transition" href="/u/demo">
+                Demo profile
+              </Link>
+              <Link className="hover:text-neutral-200 transition" href="/edit">
+                Create / Edit
+              </Link>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </main>
   );
 }

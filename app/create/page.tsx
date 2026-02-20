@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/useSession";
+import { useRecordReferral } from "@/lib/useRecordReferral";
 import EditLinksForm from "@/app/components/EditLinksForm";
 import AuthPanel from "@/app/components/AuthPanel";
 
@@ -24,6 +25,9 @@ export default function CreatePage() {
     }
   }, []);
   const [showAuth, setShowAuth] = useState(false);
+
+  // Record referral on first login (no-op if no ref or already recorded)
+  useRecordReferral(supabase, userId);
 
   function refetchUser() {
     setShowAuth(false);

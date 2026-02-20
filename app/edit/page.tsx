@@ -1,18 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useSession } from "@/lib/useSession";
-import { useHasProfile } from "@/lib/useHasProfile";
+import { useRecordReferral } from "@/lib/useRecordReferral";
 import EditLinksForm from "@/app/components/EditLinksForm";
 import AuthPanel from "@/app/components/AuthPanel";
 
 export default function EditPage() {
   const router = useRouter();
   const { user, loading: sessionLoading } = useSession();
-  const { hasProfile, loading: profileLoading, profileError } = useHasProfile();
   const userId = user?.id ?? null;
   const supabase = useMemo(() => {
     try {
@@ -23,45 +22,19 @@ export default function EditPage() {
   }, []);
   const [showAuth, setShowAuth] = useState(false);
 
-  // Route protection: redirect to create only when we know user has no profile (no fetch error)
-  useEffect(() => {
-    if (sessionLoading || profileLoading) return;
-    if (profileError) return; // don't redirect on fetch error — we don't know if they have a profile
-    if (user && !hasProfile) {
-      router.replace("/create");
-    }
-  }, [user, hasProfile, sessionLoading, profileLoading, profileError, router]);
+  // Record referral on first login (no-op if no ref or already recorded)
+  useRecordReferral(supabase, userId);
 
   function refetchUser() {
     setShowAuth(false);
   }
 
   const supabaseMissing = supabase === null;
-  const needsRedirect = user && !hasProfile && !profileError;
-  const checkingAccess = sessionLoading || profileLoading || needsRedirect;
 
-  if (checkingAccess) {
+  if (sessionLoading) {
     return (
       <main className="min-h-screen w-full bg-black flex justify-center items-center">
         <p className="text-white/70">Loading…</p>
-      </main>
-    );
-  }
-
-  if (user && profileError) {
-    return (
-      <main className="min-h-screen w-full bg-black flex justify-center items-center">
-        <div className="text-center px-4">
-          <p className="text-white/90 mb-2">Could not load your profile.</p>
-          <p className="text-white/60 text-sm mb-4">Try refreshing the page or signing in again.</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20"
-          >
-            Retry
-          </button>
-        </div>
       </main>
     );
   }

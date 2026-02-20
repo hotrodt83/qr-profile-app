@@ -9,65 +9,63 @@ import QRProfile from "@/app/components/QRProfile";
 import FloatingSocialIcons from "@/app/components/FloatingSocialIcons";
 import RuntimeErrorLogger from "@/app/components/RuntimeErrorLogger";
 import LandingTitleBrain, { type LandingTitleTheme } from "@/app/components/LandingTitleBrain";
-import { createBrowserClient } from "@/lib/supabase/client";
-import { useHasProfile } from "@/lib/useHasProfile";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 type Props = {
   qrValue: string;
+  isAuthed?: boolean;
 };
 
-function LandingWithModalInner({ qrValue: qrValueProp }: Props) {
+const STEPUP_COOKIE = "smartqr_stepup";
+
+function checkStepUpCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  const cookies = document.cookie.split(";");
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split("=");
+    if (name === STEPUP_COOKIE && value) {
+      const ts = parseInt(value, 10);
+      if (isNaN(ts)) return value === "1";
+      return Date.now() < ts;
+    }
+  }
+  return false;
+}
+
+function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props) {
   const router = useRouter();
-  const [supabase, setSupabase] = useState<ReturnType<typeof createBrowserClient> | null>(null);
   const navInFlightRef = useRef(false);
-  const { hasProfile, profile, loading: profileLoading } = useHasProfile();
+  const [stepUpOk, setStepUpOk] = useState(false);
 
   useEffect(() => {
-    setSupabase(createBrowserClient());
-  }, []);
-
-  const isFirstTimeUser = !profileLoading && !hasProfile;
+    if (isAuthed) {
+      setStepUpOk(checkStepUpCookie());
+    }
+  }, [isAuthed]);
 
   const authEmailNext = "/auth/email?next=" + encodeURIComponent("/verify?next=" + encodeURIComponent("/create"));
+  const secureEditNext = "/secure?next=" + encodeURIComponent("/edit");
 
-  const handleQrClick = useCallback(async () => {
+  const handleQrClick = useCallback(() => {
+    if (!isAuthed) return;
     if (navInFlightRef.current) return;
     navInFlightRef.current = true;
-    try {
-      if (!supabase) {
-        router.push(authEmailNext);
-        return;
-      }
-      const { data } = await supabase.auth.getSession();
-      const session = data.session;
-      if (!session) {
-        router.push(authEmailNext);
-        return;
-      }
-      if (!hasProfile) {
-        router.push("/create");
-        return;
-      }
-      router.push("/verify?next=" + encodeURIComponent("/edit"));
-    } catch {
-      router.push(authEmailNext);
-    } finally {
-      navInFlightRef.current = false;
+    if (stepUpOk) {
+      router.push("/edit");
+    } else {
+      router.push(secureEditNext);
     }
-  }, [supabase, router, hasProfile]);
+    navInFlightRef.current = false;
+  }, [isAuthed, stepUpOk, router, secureEditNext]);
 
   const qrValue =
     qrValueProp && qrValueProp.trim() !== ""
       ? qrValueProp
       : `${getBaseUrl().replace(/\/$/, "").trim()}/`;
 
-  const profileUrl = hasProfile && profile?.username?.trim()
-    ? `${getBaseUrl().replace(/\/$/, "").trim()}/u/${encodeURIComponent(profile.username.trim())}`
-    : undefined;
-
-  /** Landing wordmark colour. Options: qr (matches QR ring), cyan, futuristic, gold, violet, mint, coral. */
   const titleTheme: LandingTitleTheme = "qr";
+
+  const createHref = isAuthed ? secureEditNext : authEmailNext;
 
   return (
     <main className="landingContainer" role="main">
@@ -79,7 +77,7 @@ function LandingWithModalInner({ qrValue: qrValueProp }: Props) {
       </h1>
       <p className="landingTagline">Your identity in one scan.</p>
       <div className="ctaRow">
-        <Link href="/create" className="landingBtn landingBtnPrimary">
+        <Link href={createHref} className="landingBtn landingBtnPrimary">
           Create SmartQR
         </Link>
       </div>
@@ -89,11 +87,11 @@ function LandingWithModalInner({ qrValue: qrValueProp }: Props) {
         </div>
         <div className="qrCenter relative z-10">
           <QRProfile
-            value={profileUrl ?? qrValue}
-            onClick={isFirstTimeUser ? undefined : handleQrClick}
-            href={isFirstTimeUser ? undefined : profileUrl}
-            disabled={isFirstTimeUser}
-            title={isFirstTimeUser ? "Create your SmartQR first" : undefined}
+            value={qrValue}
+            onClick={isAuthed ? handleQrClick : undefined}
+            href={undefined}
+            disabled={!isAuthed}
+            title={isAuthed ? "Manage your SmartQR" : "Create your SmartQR first"}
           />
         </div>
       </div>

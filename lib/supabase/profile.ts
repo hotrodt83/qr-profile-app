@@ -184,7 +184,7 @@ export async function upsertProfile(
   return { data: null, error: new Error("Save failed after retries") }
 }
 
-/** Update only avatar_url (and updated_at). Use for photo upload to avoid large full upsert. */
+/** Update only avatar_url (and updated_at). Uses upsert to ensure row exists. */
 export async function updateAvatarUrl(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -193,9 +193,37 @@ export async function updateAvatarUrl(
   const updated_at = new Date().toISOString()
   const { error } = await supabase
     .from("profiles")
-    .update({ avatar_url: avatarUrl, updated_at } as never)
-    .eq("id", userId)
+    .upsert({ id: userId, avatar_url: avatarUrl, updated_at } as never, { onConflict: "id" })
   return { error }
+}
+
+/** Ensures a profile row exists for the given user. Creates with minimal defaults if missing. */
+export async function ensureProfileExists(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  email?: string | null
+): Promise<{ data: ProfilesRow | null; error: unknown }> {
+  const result = await fetchProfileByUserId(supabase, userId)
+  if (result.data) {
+    return { data: result.data, error: null }
+  }
+  if (result.error) {
+    return { data: null, error: result.error }
+  }
+  const usernameFromEmail = email?.split("@")[0]?.replace(/[^a-zA-Z0-9_]/g, "").slice(0, 30) || null
+  const minimalRow: ProfilesInsert = {
+    id: userId,
+    username: usernameFromEmail,
+    display_name: usernameFromEmail,
+    avatar_url: null,
+    updated_at: new Date().toISOString(),
+  }
+  const { data, error } = await supabase
+    .from("profiles")
+    .upsert(minimalRow as never, { onConflict: "id" })
+    .select()
+    .maybeSingle()
+  return { data: data ?? null, error }
 }
 
 /** Update only face descriptor for owner verification (enrollment). */

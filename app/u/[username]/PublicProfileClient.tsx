@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import QRCode from "react-qr-code";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
-import { downloadVCard, type VCardInput } from "@/lib/vcard";
 
 const isOn = (v: unknown) => v === true || v === "true" || v === 1;
 const stripAt = (s: string) => String(s).replace(/^@+/, "").trim();
@@ -48,7 +46,6 @@ type Props = {
 };
 
 export default function PublicProfileClient({ profile, username, publicUrl, invalidLink, profileUrl }: Props) {
-  const qrRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
   const isEmpty = !profile || invalidLink;
 
@@ -104,60 +101,12 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
     });
   }, [publicUrl]);
 
-  const downloadQR = useCallback(() => {
-    const svg = qrRef.current?.querySelector("svg");
-    if (!svg) return;
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      const a = document.createElement("a");
-      a.download = downloadFilename;
-      a.href = canvas.toDataURL("image/png");
-      a.click();
-    };
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
-  }, [invalidLink, username]);
-
-  const downloadFilename = invalidLink ? "qr-home.png" : `qr-${username}.png`;
   const displayName = invalidLink ? "Invalid link" : (profile?.display_name || profile?.username || username || "Profile");
   const handle = invalidLink ? undefined : (profile?.username || username);
-
-  const hasContactForVCard = items.length > 0;
-  const saveContact = useCallback(() => {
-    const phoneItem = items.find((i) => i.label === "Phone");
-    const emailItem = items.find((i) => i.label === "Email");
-    const whatsappItem = items.find((i) => i.label === "WhatsApp");
-    const vcardData: VCardInput = {
-      displayName: profile?.display_name || profile?.username || username,
-      username: handle ? `@${handle}` : null,
-      bio: profile?.bio ?? undefined,
-      phone: phoneItem?.value ?? undefined,
-      email: emailItem?.value ?? undefined,
-      whatsapp: whatsappItem?.value ?? undefined,
-      website: profile?.website ?? undefined,
-      url: profileUrl ?? publicUrl,
-    };
-    downloadVCard(vcardData, `${username || "contact"}.vcf`);
-  }, [profile, username, handle, items, profileUrl, publicUrl]);
 
   return (
     <div className="publicProfileShell">
       <div className="publicProfileCard">
-        {/* QR + avatar + name area */}
-        <div className="publicProfileQRWrap" ref={qrRef}>
-          <div className="publicProfileQRInner">
-            <div className="publicProfileQRCircle">
-              <QRCode value={publicUrl} size={200} level="M" />
-            </div>
-          </div>
-        </div>
-
         {profile?.avatar_url && (
           <div className="publicProfileAvatarWrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -217,22 +166,14 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
           <button type="button" onClick={copyLink} className="publicProfileBtn publicProfileBtn--secondary">
             {copied ? "Copied!" : "Share"}
           </button>
-          <button type="button" onClick={downloadQR} className="publicProfileBtn publicProfileBtn--secondary">
-            Download QR
-          </button>
-          {hasContactForVCard && (
-            <button type="button" onClick={saveContact} className="publicProfileBtn publicProfileBtn--secondary">
-              Save Contact
-            </button>
-          )}
         </div>
 
         <div className="publicProfileCTAs">
-          <Link href="/edit" className="publicProfileBtn publicProfileBtn--primary">
+          <Link
+            href={`/auth/email?ref=${encodeURIComponent(handle ?? username)}`}
+            className="publicProfileBtn publicProfileBtn--primary"
+          >
             Create your own QR profile
-          </Link>
-          <Link href="/" className="publicProfileBtn publicProfileBtn--ghost">
-            Back to home
           </Link>
         </div>
       </div>

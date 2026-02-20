@@ -1,10 +1,24 @@
 import dynamic from "next/dynamic";
+import { cookies } from "next/headers";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const LandingWithModal = dynamic(
   () => import("@/app/components/LandingWithModal"),
   { ssr: false, loading: () => <div className="landingContainer min-h-[60vh]" role="main" aria-busy="true" /> }
 );
+
+function hasSupabaseSession(): boolean {
+  const cookieStore = cookies();
+  const allCookies = cookieStore.getAll();
+  for (const cookie of allCookies) {
+    if (cookie.name.includes("sb-") && cookie.name.includes("-auth-token")) {
+      if (cookie.value && cookie.value.length > 10) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 export default function HomePage() {
   let qrValue: string;
@@ -16,5 +30,8 @@ export default function HomePage() {
   } catch (_) {
     qrValue = "http://localhost:3001/";
   }
-  return <LandingWithModal qrValue={qrValue} />;
+
+  const isAuthed = hasSupabaseSession();
+
+  return <LandingWithModal qrValue={qrValue} isAuthed={isAuthed} />;
 }
