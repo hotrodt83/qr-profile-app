@@ -7,6 +7,9 @@ import { EDIT_FIELDS } from "@/lib/editor-fields";
 import { downloadVCard, type VCardInput } from "@/lib/vcard";
 
 const isOn = (v: unknown) => v === true || v === "true" || v === 1;
+const stripAt = (s: string) => String(s).replace(/^@+/, "").trim();
+const ensureHttps = (url: string) =>
+  url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
 
 export type PublicProfileData = {
   id: string;
@@ -18,11 +21,17 @@ export type PublicProfileData = {
   email?: string | null;
   whatsapp?: string | null;
   telegram?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  x?: string | null;
   website?: string | null;
   phone_public?: unknown;
   email_public?: unknown;
   whatsapp_public?: unknown;
   telegram_public?: unknown;
+  instagram_public?: unknown;
+  facebook_public?: unknown;
+  x_public?: unknown;
   website_public?: unknown;
 } | null;
 
@@ -62,8 +71,28 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
         },
         profile.telegram && (profile.telegram_public == null || isOn(profile.telegram_public)) && {
           label: "Telegram",
-          href: `https://t.me/${String(profile.telegram).replace(/@/g, "")}`,
+          href: `https://t.me/${stripAt(profile.telegram)}`,
           value: profile.telegram,
+        },
+        profile.instagram && (profile.instagram_public == null || isOn(profile.instagram_public)) && {
+          label: "Instagram",
+          href: `https://instagram.com/${stripAt(profile.instagram)}`,
+          value: profile.instagram,
+        },
+        profile.facebook && (profile.facebook_public == null || isOn(profile.facebook_public)) && {
+          label: "Facebook",
+          href: `https://facebook.com/${stripAt(profile.facebook)}`,
+          value: profile.facebook,
+        },
+        profile.x && (profile.x_public == null || isOn(profile.x_public)) && {
+          label: "X",
+          href: `https://x.com/${stripAt(profile.x)}`,
+          value: profile.x,
+        },
+        profile.website && (profile.website_public == null || isOn(profile.website_public)) && {
+          label: "Website",
+          href: ensureHttps(profile.website),
+          value: profile.website,
         },
       ].filter(Boolean) as ContactItem[]
     : [];

@@ -15,11 +15,18 @@ type PublicProfile = {
   email: string | null;
   whatsapp: string | null;
   telegram: string | null;
+  instagram: string | null;
+  facebook: string | null;
+  x: string | null;
   website: string | null;
   phone_public: boolean | null;
   email_public: boolean | null;
   whatsapp_public: boolean | null;
   telegram_public: boolean | null;
+  instagram_public: boolean | null;
+  facebook_public: boolean | null;
+  x_public: boolean | null;
+  website_public: boolean | null;
   email_verified: boolean | null;
 };
 
@@ -108,7 +115,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, avatar_url, phone, email, whatsapp, telegram, website, phone_public, email_public, whatsapp_public, telegram_public, email_verified")
+    .select("id, username, display_name, bio, avatar_url, phone, email, whatsapp, telegram, instagram, facebook, x, website, phone_public, email_public, whatsapp_public, telegram_public, instagram_public, facebook_public, x_public, website_public, email_verified")
     .eq("username", trimmed)
     .maybeSingle();
   const row = data as PublicProfile | null;
@@ -130,11 +137,18 @@ export default async function PublicProfilePage({ params }: Props) {
         email: row.email,
         whatsapp: row.whatsapp,
         telegram: row.telegram,
+        instagram: row.instagram,
+        facebook: row.facebook,
+        x: row.x,
         website: row.website,
         phone_public: row.phone_public,
         email_public: row.email_public,
         whatsapp_public: row.whatsapp_public,
         telegram_public: row.telegram_public,
+        instagram_public: row.instagram_public,
+        facebook_public: row.facebook_public,
+        x_public: row.x_public,
+        website_public: row.website_public,
       }
     : null;
 
