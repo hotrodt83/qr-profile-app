@@ -35,9 +35,12 @@ export type ProfilePayload = {
   face_descriptor?: number[] | null
 }
 
-/** Minimal columns that exist in most profiles schemas (avoids schema-cache errors for missing columns). */
+/** Minimal columns when some link columns (e.g. whatsapp) are missing from the table. */
 const PROFILE_COLUMNS_MINIMAL =
-  "id,username,display_name,bio,avatar_url,whatsapp,facebook,instagram,tiktok,telegram,linkedin,phone,x,website,updated_at"
+  "id,username,display_name,bio,avatar_url,facebook,instagram,tiktok,telegram,linkedin,email,phone,x,website,updated_at"
+
+/** Smallest set when table has only core columns (avoids missing-column errors on strict schemas). */
+const PROFILE_COLUMNS_BASE = "id,username,display_name,bio,avatar_url,updated_at"
 
 export type FetchProfileResult = { data: ProfilesRow | null; error: null } | { data: null; error: unknown }
 
@@ -60,6 +63,16 @@ export async function fetchProfileByUserId(
       .eq("id", userId)
       .maybeSingle()
     if (!errMin) return { data: dataMin ?? null, error: null }
+    const msgMin = String((errMin as { message?: string }).message ?? "")
+    if (msgMin.includes("Could not find the") && msgMin.includes("column")) {
+      const { data: dataBase, error: errBase } = await supabase
+        .from("profiles")
+        .select(PROFILE_COLUMNS_BASE)
+        .eq("id", userId)
+        .maybeSingle()
+      if (!errBase) return { data: dataBase ?? null, error: null }
+      return { data: null, error: errBase }
+    }
     return { data: null, error: errMin }
   }
   return { data: null, error }
@@ -77,12 +90,22 @@ export async function fetchProfileByUsername(
   if (!error) return data
   const msg = String((error as { message?: string }).message ?? "")
   if (msg.includes("Could not find the") && msg.includes("column")) {
-    const { data: dataMin } = await supabase
+    const { data: dataMin, error: errMin } = await supabase
       .from("profiles")
       .select(PROFILE_COLUMNS_MINIMAL)
       .eq("username", username)
       .maybeSingle()
-    return dataMin ?? null
+    if (!errMin) return dataMin ?? null
+    const msgMin = String((errMin as { message?: string }).message ?? "")
+    if (msgMin.includes("Could not find the") && msgMin.includes("column")) {
+      const { data: dataBase } = await supabase
+        .from("profiles")
+        .select(PROFILE_COLUMNS_BASE)
+        .eq("username", username)
+        .maybeSingle()
+      return dataBase ?? null
+    }
+    return null
   }
   return null
 }

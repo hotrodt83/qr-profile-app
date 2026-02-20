@@ -1402,6 +1402,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .edit-share-option-num {
@@ -1422,6 +1423,24 @@ body {
 .edit-share-option .edit-share-btn {
   flex: 1;
   min-width: 0;
+}
+
+.edit-share-hint {
+  width: 100%;
+  margin-left: 40px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.edit-share-copy-fallback {
+  margin: -8px 0 12px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 180, 0, 0.15);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 180, 0, 0.35);
 }
 
 .edit-share-url-wrap {
