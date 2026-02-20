@@ -4,7 +4,7 @@ import type { Database, ProfilesRow, ProfilesInsert } from "./database.types"
 export type FlatProfile = ProfilesRow
 
 const PROFILE_COLUMNS =
-  "id,username,display_name,bio,avatar_url,whatsapp,facebook,instagram,tiktok,telegram,linkedin,email,phone,x,website,phone_public,email_public,whatsapp_public,email_verified,updated_at"
+  "id,username,display_name,bio,avatar_url,whatsapp,facebook,instagram,tiktok,telegram,linkedin,email,phone,x,website,phone_public,email_public,whatsapp_public,facebook_public,instagram_public,tiktok_public,telegram_public,linkedin_public,x_public,website_public,email_verified,face_descriptor,updated_at"
 
 export type ProfilePayload = {
   username?: string | null
@@ -24,19 +24,45 @@ export type ProfilePayload = {
   phone_public?: boolean | null
   email_public?: boolean | null
   whatsapp_public?: boolean | null
+  facebook_public?: boolean | null
+  instagram_public?: boolean | null
+  tiktok_public?: boolean | null
+  telegram_public?: boolean | null
+  linkedin_public?: boolean | null
+  x_public?: boolean | null
+  website_public?: boolean | null
   email_verified?: boolean | null
+  face_descriptor?: number[] | null
 }
 
+/** Minimal columns that exist in most profiles schemas (avoids schema-cache errors for missing columns). */
+const PROFILE_COLUMNS_MINIMAL =
+  "id,username,display_name,bio,avatar_url,whatsapp,facebook,instagram,tiktok,telegram,linkedin,phone,x,website,updated_at"
+
+export type FetchProfileResult = { data: ProfilesRow | null; error: null } | { data: null; error: unknown }
+
+/** Fetches profile by user id. Returns { data, error } so callers can distinguish "no row" from real errors. */
 export async function fetchProfileByUserId(
   supabase: SupabaseClient<Database>,
   userId: string
-): Promise<ProfilesRow | null> {
+): Promise<FetchProfileResult> {
   const { data, error } = await supabase
     .from("profiles")
     .select(PROFILE_COLUMNS)
     .eq("id", userId)
     .maybeSingle()
-  return error ? null : data
+  if (!error) return { data: data ?? null, error: null }
+  const msg = String((error as { message?: string }).message ?? "")
+  if (msg.includes("Could not find the") && msg.includes("column")) {
+    const { data: dataMin, error: errMin } = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS_MINIMAL)
+      .eq("id", userId)
+      .maybeSingle()
+    if (!errMin) return { data: dataMin ?? null, error: null }
+    return { data: null, error: errMin }
+  }
+  return { data: null, error }
 }
 
 export async function fetchProfileByUsername(
@@ -48,7 +74,51 @@ export async function fetchProfileByUsername(
     .select(PROFILE_COLUMNS)
     .eq("username", username)
     .maybeSingle()
-  return error ? null : data
+  if (!error) return data
+  const msg = String((error as { message?: string }).message ?? "")
+  if (msg.includes("Could not find the") && msg.includes("column")) {
+    const { data: dataMin } = await supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS_MINIMAL)
+      .eq("username", username)
+      .maybeSingle()
+    return dataMin ?? null
+  }
+  return null
+}
+
+/** Server-side / shared validation: username required (non-empty). Use before upsert for defense in depth. */
+export function validateProfilePayload(payload: ProfilePayload): { valid: true } | { valid: false; message: string } {
+  const u = payload.username;
+  if (u == null || String(u).trim() === "") {
+    return { valid: false, message: "Username is required." };
+  }
+  return { valid: true };
+}
+
+const UPSERT_KEYS: (keyof ProfilePayload)[] = [
+  "username", "display_name", "bio", "avatar_url", "email_verified",
+  "whatsapp", "facebook", "instagram", "tiktok", "telegram", "linkedin", "email", "phone", "x", "website",
+  "phone_public", "email_public", "whatsapp_public", "facebook_public", "instagram_public",
+  "tiktok_public", "telegram_public", "linkedin_public", "x_public", "website_public",
+]
+
+/** Match PostgREST "Could not find the 'X' column of 'profiles' in the schema cache" */
+const MISSING_COLUMN_RE = /Could not find the '(\w+)' column of 'profiles' in the schema cache/
+
+export function buildUpsertRow(
+  userId: string,
+  payload: ProfilePayload,
+  excludeKeys: Set<string> = new Set()
+): ProfilesInsert {
+  const updated_at = new Date().toISOString()
+  const row: Record<string, unknown> = { id: userId, updated_at }
+  for (const key of UPSERT_KEYS) {
+    if (excludeKeys.has(key)) continue
+    const v = payload[key]
+    if (v !== undefined) row[key] = v
+  }
+  return row as ProfilesInsert
 }
 
 export async function upsertProfile(
@@ -56,11 +126,64 @@ export async function upsertProfile(
   userId: string,
   payload: ProfilePayload
 ): Promise<{ data: ProfilesRow | null; error: unknown }> {
-  const row: ProfilesInsert = {
-    id: userId,
-    ...payload,
-    updated_at: new Date().toISOString(),
+  const excludeKeys = new Set<string>()
+  const maxAttempts = 25
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const row = buildUpsertRow(userId, payload, excludeKeys)
+    if (process.env.NODE_ENV === "development") {
+      console.log("[profile] upsert row keys:", Object.keys(row), "username:", (row as Record<string, unknown>).username)
+    }
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(row as never, { onConflict: "id" })
+      .select()
+      .maybeSingle()
+    if (process.env.NODE_ENV === "development" && (error || data)) {
+      console.log("[profile] upsert response:", { data, error })
+    }
+    if (!error) return { data: data ?? null, error: null }
+    const msg = String((error as { message?: string }).message ?? "")
+    const match = msg.match(MISSING_COLUMN_RE)
+    if (match) {
+      const col = match[1]
+      excludeKeys.add(col)
+      if (col.endsWith("_public")) {
+        const base = col.replace(/_public$/, "")
+        if (UPSERT_KEYS.includes(base as keyof ProfilePayload)) excludeKeys.add(base)
+      } else {
+        const pub = `${col}_public`
+        if (UPSERT_KEYS.includes(pub as keyof ProfilePayload)) excludeKeys.add(pub)
+      }
+      continue
+    }
+    return { data: null, error }
   }
+  return { data: null, error: new Error("Save failed after retries") }
+}
+
+/** Update only avatar_url (and updated_at). Use for photo upload to avoid large full upsert. */
+export async function updateAvatarUrl(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  avatarUrl: string | null
+): Promise<{ error: unknown }> {
+  const updated_at = new Date().toISOString()
+  const { error } = await supabase
+    .from("profiles")
+    .update({ avatar_url: avatarUrl, updated_at } as never)
+    .eq("id", userId)
+  return { error }
+}
+
+/** Update only face descriptor for owner verification (enrollment). */
+export async function updateFaceDescriptor(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  descriptor: number[]
+): Promise<{ error: unknown }> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase.from("profiles") as any).upsert(row, { onConflict: "id" }).select().maybeSingle()
+  const { error } = await (supabase.from("profiles") as any)
+    .update({ face_descriptor: descriptor, updated_at: new Date().toISOString() })
+    .eq("id", userId)
+  return { error }
 }
