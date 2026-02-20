@@ -62,7 +62,7 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
         },
         profile.telegram && (profile.telegram_public == null || isOn(profile.telegram_public)) && {
           label: "Telegram",
-          href: `https://t.me/${String(profile.telegram).replace("@", "")}`,
+          href: `https://t.me/${String(profile.telegram).replace(/@/g, "")}`,
           value: profile.telegram,
         },
       ].filter(Boolean) as ContactItem[]
