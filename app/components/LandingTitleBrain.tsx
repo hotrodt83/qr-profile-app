@@ -1,9 +1,18 @@
 "use client";
 
 /** Theme for title + icon. Must match data-theme on .landingTitle. */
-export type LandingTitleTheme = "gold" | "violet" | "mint" | "coral" | "cyan" | "futuristic";
+export type LandingTitleTheme = "gold" | "violet" | "mint" | "coral" | "cyan" | "futuristic" | "qr";
 
 const GRADIENTS: Record<LandingTitleTheme, { stops: Array<{ offset: string; color: string }> }> = {
+  /** Matches QR ring: teal, purple, magenta, amber */
+  qr: {
+    stops: [
+      { offset: "0%", color: "#00ffcc" },
+      { offset: "33%", color: "#7b2cbf" },
+      { offset: "66%", color: "#ff006e" },
+      { offset: "100%", color: "#ffbe0b" },
+    ],
+  },
   futuristic: {
     stops: [
       { offset: "0%", color: "#ffffff" },
@@ -60,9 +69,10 @@ const GRADIENTS: Record<LandingTitleTheme, { stops: Array<{ offset: string; colo
  * SmartQR “Q” icon: mini QR-style with finder blocks + Q tail.
  * Pass theme to match the landing title data-theme.
  */
-export default function LandingTitleBrain({ theme = "cyan" }: { theme?: LandingTitleTheme }) {
-  const grad = GRADIENTS[theme] ?? GRADIENTS.cyan;
+export default function LandingTitleBrain({ theme = "qr" }: { theme?: LandingTitleTheme }) {
+  const grad = GRADIENTS[theme] ?? GRADIENTS.qr;
   const gradId = `landingBrainGrad-${theme}`;
+  const qrFill = theme === "qr" ? "#ffffff" : `url(#${gradId})`;
 
   return (
     <span className="landingTitleBrain" aria-hidden>
@@ -88,6 +98,7 @@ export default function LandingTitleBrain({ theme = "cyan" }: { theme?: LandingT
             ))}
           </linearGradient>
         </defs>
+        {/* Q border: gradient */}
         <rect
           x="10"
           y="10"
@@ -99,13 +110,15 @@ export default function LandingTitleBrain({ theme = "cyan" }: { theme?: LandingT
           stroke={`url(#${gradId})`}
           strokeWidth="2"
         />
-        <g fill={`url(#${gradId})`}>
+        {/* Mini QR blocks inside: white when qr theme */}
+        <g fill={qrFill}>
           <rect x="14" y="14" width="8" height="8" rx="1" />
           <rect x="24" y="14" width="8" height="8" rx="1" />
           <rect x="14" y="24" width="8" height="8" rx="1" />
           <rect x="24" y="24" width="8" height="8" rx="1" />
           <rect x="20" y="20" width="6" height="6" rx="1" />
         </g>
+        {/* Q tail: gradient */}
         <path
           d="M42 42 L50 52"
           stroke={`url(#${gradId})`}

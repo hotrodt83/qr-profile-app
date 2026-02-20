@@ -66,8 +66,8 @@ function LandingWithModalInner({ qrValue: qrValueProp }: Props) {
     ? `${getBaseUrl().replace(/\/$/, "").trim()}/u/${encodeURIComponent(profile.username.trim())}`
     : undefined;
 
-  /** Landing wordmark colour. Options: cyan (matches project), futuristic, gold, violet, mint, coral. */
-  const titleTheme: LandingTitleTheme = "cyan";
+  /** Landing wordmark colour. Options: qr (matches QR ring), cyan, futuristic, gold, violet, mint, coral. */
+  const titleTheme: LandingTitleTheme = "qr";
 
   return (
     <main className="landingContainer" role="main">

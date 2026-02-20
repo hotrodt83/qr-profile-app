@@ -210,7 +210,9 @@ export default function SharePage() {
             <div className="edit-qr-modal" onClick={(e) => e.stopPropagation()}>
               <p className="edit-qr-modal-title">Share my QR code</p>
               <div ref={qrModalRef} className="edit-qr-modal-qr-wrap">
-                <QRCode value={profileUrl} size={256} level="H" bgColor="#ffffff" fgColor="#000000" />
+                <div className="edit-qr-modal-qr-inner">
+                  <QRCode value={profileUrl} size={256} level="H" bgColor="#ffffff" fgColor="#000000" />
+                </div>
               </div>
               <div className="edit-qr-modal-actions">
                 <button

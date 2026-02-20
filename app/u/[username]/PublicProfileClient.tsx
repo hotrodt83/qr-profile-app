@@ -85,7 +85,9 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
         {/* QR above the fold */}
         <div className="publicProfileQRWrap" ref={qrRef}>
           <div className="publicProfileQRInner">
-            <QRCode value={publicUrl} size={200} level="M" />
+            <div className="publicProfileQRCircle">
+              <QRCode value={publicUrl} size={200} level="M" />
+            </div>
           </div>
         </div>
 
