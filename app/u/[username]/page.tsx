@@ -14,10 +14,12 @@ type PublicProfile = {
   phone: string | null;
   email: string | null;
   whatsapp: string | null;
+  telegram: string | null;
   website: string | null;
   phone_public: boolean | null;
   email_public: boolean | null;
   whatsapp_public: boolean | null;
+  telegram_public: boolean | null;
   email_verified: boolean | null;
 };
 
@@ -98,7 +100,6 @@ export default async function PublicProfilePage({ params }: Props) {
         profile={null}
         username={trimmed}
         publicUrl={getPublicUrl(trimmed)}
-        contactFields={{}}
         profileUrl={getPublicUrl(trimmed)}
       />
     );
@@ -107,7 +108,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const supabase = createServerClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, username, display_name, bio, avatar_url, phone, email, whatsapp, website, phone_public, email_public, whatsapp_public, email_verified")
+    .select("id, username, display_name, bio, avatar_url, phone, email, whatsapp, telegram, website, phone_public, email_public, whatsapp_public, telegram_public, email_verified")
     .eq("username", trimmed)
     .maybeSingle();
   const row = data as PublicProfile | null;
@@ -117,20 +118,24 @@ export default async function PublicProfilePage({ params }: Props) {
   }
 
   const publicUrl = getPublicUrl(trimmed);
-  const verified = !!row?.email_verified;
-  const contactFields: PublicContactFields = {};
-  if (row && verified) {
-    if (row.phone_public && row.phone) contactFields.phone = row.phone;
-    if (row.email_public && row.email) contactFields.email = row.email;
-    if (row.whatsapp_public && row.whatsapp) contactFields.whatsapp = row.whatsapp;
-    if (row.website) contactFields.website = row.website;
-  } else if (row && row.website) {
-    contactFields.website = row.website;
-  }
-
   const resolvedAvatarUrl = row?.avatar_url ? await getPublicAvatarUrl(row.avatar_url) : null;
   const profileForClient = row
-    ? { id: row.id, username: row.username, display_name: row.display_name, bio: row.bio, avatar_url: resolvedAvatarUrl ?? row.avatar_url }
+    ? {
+        id: row.id,
+        username: row.username,
+        display_name: row.display_name,
+        bio: row.bio,
+        avatar_url: resolvedAvatarUrl ?? row.avatar_url,
+        phone: row.phone,
+        email: row.email,
+        whatsapp: row.whatsapp,
+        telegram: row.telegram,
+        website: row.website,
+        phone_public: row.phone_public,
+        email_public: row.email_public,
+        whatsapp_public: row.whatsapp_public,
+        telegram_public: row.telegram_public,
+      }
     : null;
 
   return (
@@ -138,7 +143,6 @@ export default async function PublicProfilePage({ params }: Props) {
       profile={error ? null : profileForClient}
       username={trimmed}
       publicUrl={publicUrl}
-      contactFields={contactFields}
       profileUrl={publicUrl}
     />
   );
