@@ -7,30 +7,19 @@ import QRCode from "react-qr-code";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { fetchProfileByUserId } from "@/lib/supabase/profile";
 import { useSession } from "@/lib/useSession";
-
-function getBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-    if (siteUrl && siteUrl.startsWith("http")) return siteUrl;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-    if (appUrl && appUrl.startsWith("http")) return appUrl;
-    return window.location.origin;
-  }
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  if (siteUrl && siteUrl.startsWith("http")) return siteUrl;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
-  if (appUrl && appUrl.startsWith("http")) return appUrl;
-  return process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3001";
-}
+import { buildProfileUrl, isLocalhost, getProductionSiteUrl } from "@/lib/siteUrl";
 
 export default function SharePage() {
   const router = useRouter();
   const { user, loading: sessionLoading } = useSession();
+  const [username, setUsername] = useState<string | null>(null);
   const [profileUrl, setProfileUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const qrModalRef = useRef<HTMLDivElement>(null);
+  const urlInputRef = useRef<HTMLInputElement>(null);
 
   const supabase = useMemo(() => createBrowserClient(), []);
 
@@ -56,21 +45,24 @@ export default function SharePage() {
           if (process.env.NODE_ENV === "development") {
             console.error("[share] profile fetch error:", result.error);
           }
+          setUsername(null);
           setProfileUrl(null);
           setLoading(false);
           return;
         }
-        const username = result.data?.username?.trim();
-        if (username) {
-          const base = getBaseUrl();
-          setProfileUrl(`${base}/u/${encodeURIComponent(username)}`);
+        const name = result.data?.username?.trim();
+        if (name) {
+          setUsername(name);
+          setProfileUrl(buildProfileUrl(name) || null);
         } else {
+          setUsername(null);
           setProfileUrl(null);
           router.replace("/create");
         }
       } catch (err) {
         if (!cancelled) {
           console.error("[share] profile fetch threw:", err);
+          setUsername(null);
           setProfileUrl(null);
         }
       } finally {
@@ -80,12 +72,18 @@ export default function SharePage() {
     return () => { cancelled = true; };
   }, [user?.id, supabase, router]);
 
-  function copyProfileLink() {
+  async function copyProfileLink() {
     if (!profileUrl) return;
-    navigator.clipboard.writeText(profileUrl).then(() => {
+    setCopyError(false);
+    try {
+      await navigator.clipboard.writeText(profileUrl);
       setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    });
+      setTimeout(() => setCopiedLink(false), 3000);
+    } catch {
+      setCopyError(true);
+      urlInputRef.current?.select();
+      setTimeout(() => setCopyError(false), 4000);
+    }
   }
 
   function downloadQrPng() {
@@ -113,7 +111,7 @@ export default function SharePage() {
   }
 
   const mailtoUrl = profileUrl
-    ? `mailto:?subject=${encodeURIComponent("My SmartQR")}&body=${encodeURIComponent(profileUrl)}`
+    ? `mailto:?subject=${encodeURIComponent("My SmartQR profile")}&body=${encodeURIComponent("My profile: " + profileUrl)}`
     : "";
 
   if (sessionLoading || !user) {
@@ -132,7 +130,7 @@ export default function SharePage() {
     );
   }
 
-  if (!profileUrl) {
+  if (!username) {
     router.replace("/create");
     return (
       <main className="min-h-screen w-full bg-black flex justify-center items-center">
@@ -141,12 +139,35 @@ export default function SharePage() {
     );
   }
 
+  const onLocalhost = isLocalhost();
+  const liveSiteUrl = getProductionSiteUrl();
+  const hasShareableUrl = Boolean(profileUrl);
+  const localhostNoEnv = onLocalhost && !liveSiteUrl;
+
   return (
     <main className="min-h-screen w-full bg-black flex justify-center overflow-x-hidden">
       <div className="w-full max-w-3xl px-4 py-12">
+        {localhostNoEnv && (
+          <div className="mb-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-amber-200" role="alert">
+            <p className="font-medium">You&apos;re on localhost — deploy and open Share on the live site to generate shareable links.</p>
+          </div>
+        )}
+        {onLocalhost && liveSiteUrl && (
+          <div className="mb-4 rounded-lg border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-amber-200" role="alert">
+            <p className="font-medium">Localhost links won&apos;t work for others. Use the live site link.</p>
+            <a
+              href={`${liveSiteUrl}/share`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block rounded bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+            >
+              Open Live Share Page
+            </a>
+          </div>
+        )}
         <div className="edit-share edit-share--highlight">
           <p className="edit-share-label">Share your profile</p>
-          {profileUrl ? (
+          {hasShareableUrl ? (
             <>
               <div className="edit-share-options">
                 <div className="edit-share-option">
@@ -154,6 +175,7 @@ export default function SharePage() {
                   <a href={mailtoUrl} className="edit-share-btn edit-share-btn--email">
                     By email
                   </a>
+                  <span className="edit-share-hint">Opens your mail app – add recipient and send</span>
                 </div>
                 <div className="edit-share-option">
                   <span className="edit-share-option-num">2</span>
@@ -164,6 +186,7 @@ export default function SharePage() {
                   >
                     By QR code
                   </button>
+                  <span className="edit-share-hint">Show or download QR – recipient scans to open link</span>
                 </div>
                 <div className="edit-share-option">
                   <span className="edit-share-option-num">3</span>
@@ -174,21 +197,29 @@ export default function SharePage() {
                   >
                     {copiedLink ? "Link copied" : "Copy URL"}
                   </button>
+                  <span className="edit-share-hint">Paste into WhatsApp, SMS, or any app</span>
                 </div>
               </div>
+              {copyError && (
+                <p className="edit-share-copy-fallback" role="alert">
+                  Could not copy. Link is selected below – press Ctrl+C (or Cmd+C) to copy.
+                </p>
+              )}
               <div className="edit-share-url-wrap">
                 <input
+                  ref={urlInputRef}
                   type="text"
                   readOnly
-                  value={profileUrl}
+                  value={profileUrl ?? ""}
                   className="edit-share-url"
                   aria-label="Profile URL"
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
                 />
               </div>
             </>
           ) : (
             <p className="text-white/70 text-sm mb-4">
-              Set a username on your profile first so you have a link to share.
+              Deploy and open Share on the live site to generate your shareable link.
             </p>
           )}
         </div>
@@ -211,7 +242,7 @@ export default function SharePage() {
               <p className="edit-qr-modal-title">Share my QR code</p>
               <div ref={qrModalRef} className="edit-qr-modal-qr-wrap">
                 <div className="edit-qr-modal-qr-inner">
-                  <QRCode value={profileUrl} size={256} level="H" bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={profileUrl ?? ""} size={256} level="H" bgColor="#ffffff" fgColor="#000000" />
                 </div>
               </div>
               <div className="edit-qr-modal-actions">

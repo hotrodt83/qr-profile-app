@@ -19,7 +19,8 @@ Your identity in one scan. One QR code for your contact and social links. You ch
 2. **Env**
    - Copy `.env.example` to `.env.local`.
    - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-   - For production (e.g. Vercel), set `NEXT_PUBLIC_SITE_URL` to your public URL (e.g. `https://smartqr.vercel.app`) so QR codes and share links use it. Locally use `http://localhost:3001`.
+   - **Production (Vercel)**: Set `NEXT_PUBLIC_SITE_URL` to your live URL (e.g. `https://your-app.vercel.app`) in Vercel Environment Variables so copy/email/QR on Share use a working link. See **Vercel (production)** below.
+   - **Local**: In `.env.local` you can set `NEXT_PUBLIC_SITE_URL=http://localhost:3001`; for shareable links that work for others, deploy and use the Share page on the live site.
 
 3. **Run**
    - `npm install`
@@ -49,5 +50,9 @@ Each user has one profile. Updating the profile updates `/u/[username]`.
 
 ## Vercel (production)
 
-- **Project name**: You can rename the Vercel project to **smartqr** in [Vercel Dashboard](https://vercel.com) → Project Settings → General → Project Name. The app does not depend on the project name; all URLs come from `NEXT_PUBLIC_SITE_URL`.
-- After renaming, set **Production** env var `NEXT_PUBLIC_SITE_URL` to your new URL (e.g. `https://smartqr.vercel.app`) and redeploy. QR and share links will use that URL.
+- **Project name**: You can rename the Vercel project to **smartqr** in [Vercel Dashboard](https://vercel.com) → Project Settings → General → Project Name. The app does not depend on the project name; all share and QR links use `NEXT_PUBLIC_SITE_URL`.
+- **Required for share links**: In [Vercel Dashboard](https://vercel.com) → your project → **Settings** → **Environment Variables**, add:
+  - **Name**: `NEXT_PUBLIC_SITE_URL`
+  - **Value**: your live site URL, e.g. `https://qr-app-theta-tawny.vercel.app` or `https://smartqr.vercel.app` (no trailing slash)
+  - **Environment**: Production (and Preview if you want share/QR to work in preview deployments)
+- Redeploy after setting the variable. Copy, email, and QR on the Share page will then use this URL so links work for others. If this is missing on production, the app still runs but share links may be wrong; on localhost, the Share page shows a warning and asks you to use the live site.
