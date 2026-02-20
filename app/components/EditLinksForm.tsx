@@ -118,7 +118,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef(form);
   formRef.current = form;
@@ -482,66 +481,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const AVATAR_JPEG_QUALITY = 0.9;
   const MAX_DATA_URL_BYTES = 220 * 1024; // cap stored size (avatar-only update keeps payload safe)
 
-  async function uploadAvatarToServer(file: File): Promise<string> {
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    const fd = new FormData();
-    fd.append("file", file);
-
-    const res = await fetch("/api/upload-avatar", {
-      method: "POST",
-      ...(token ? { headers: { Authorization: `Bearer ${token}` } } : {}),
-      body: fd,
-    });
-
-    if (!res.ok) {
-      let msg = "Avatar upload failed.";
-      try {
-        const j = await res.json();
-        msg = j?.error || msg;
-      } catch {
-        // ignore
-      }
-      throw new Error(msg);
-    }
-
-    const data = await res.json();
-    const url =
-      data?.publicUrl ||
-      data?.url ||
-      data?.avatarUrl ||
-      data?.public_url ||
-      "";
-
-    if (!url || typeof url !== "string") {
-      throw new Error("Avatar upload succeeded but no URL was returned.");
-    }
-
-    return url;
-  }
-
-  async function handleAvatarFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const previewUrl = URL.createObjectURL(file);
-    setAvatarUrl(previewUrl);
-
-    try {
-      const uploadedUrl = await uploadAvatarToServer(file);
-      setAvatarUrl(uploadedUrl);
-      setAvatarError(null);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Avatar upload failed.";
-      setAvatarError(message);
-    } finally {
-      setTimeout(() => {
-        URL.revokeObjectURL(previewUrl);
-      }, 2000);
-      e.target.value = "";
-    }
-  }
-
   function resizeImageToDataUrl(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -723,51 +662,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
 
       <form onSubmit={handleSave} className="edit-form">
         <div className="edit-grid">
-          {/* Avatar uploader */}
-          <div className="mb-6 flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="group relative"
-              aria-label="Upload profile photo"
-            >
-              <div className="h-28 w-28 overflow-hidden rounded-full border border-teal-500/60 bg-black/40 shadow-sm">
-                {avatarUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={avatarUrl}
-                    alt="Profile avatar"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs text-white/50">
-                    Upload photo
-                  </div>
-                )}
-              </div>
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full opacity-0 transition group-hover:opacity-100">
-                <div className="rounded-full bg-black/60 px-3 py-1 text-xs text-white">
-                  Change
-                </div>
-              </div>
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarFileChange}
-              className="hidden"
-            />
-
-            <div className="text-xs text-white/50">
-              Tap to upload or change your photo
-            </div>
-            {avatarError && (
-              <p className="text-xs text-red-400" role="alert">{avatarError}</p>
-            )}
-          </div>
-
           <div className="edit-row">
             <span className="edit-icon" aria-hidden />
             <div className="edit-field-wrap">
