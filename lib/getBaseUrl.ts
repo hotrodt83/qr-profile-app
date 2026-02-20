@@ -1,15 +1,22 @@
 /**
  * Canonical app URL for QR codes and OpenGraph (no trailing slash).
- * Safe for build: never throws; falls back to VERCEL_URL or localhost if env missing.
+ * Prefers NEXT_PUBLIC_SITE_URL, then NEXT_PUBLIC_APP_URL, then VERCEL_URL, then localhost.
+ * Safe for build: never throws.
  */
 export function getBaseUrl(): string {
   if (typeof process === "undefined") return "http://localhost:3001";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  const fromEnv =
-    appUrl && typeof appUrl === "string"
-      ? String(appUrl).replace(/\/$/, "")
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteTrimmed =
+    siteUrl && typeof siteUrl === "string"
+      ? String(siteUrl).replace(/\/$/, "").trim()
       : "";
-  if (fromEnv.startsWith("http")) return fromEnv;
+  if (siteTrimmed.startsWith("http")) return siteTrimmed;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  const appTrimmed =
+    appUrl && typeof appUrl === "string"
+      ? String(appUrl).replace(/\/$/, "").trim()
+      : "";
+  if (appTrimmed.startsWith("http")) return appTrimmed;
   const vercelUrl = process.env.VERCEL_URL;
   if (vercelUrl && typeof vercelUrl === "string") {
     return `https://${vercelUrl}`;

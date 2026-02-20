@@ -12,6 +12,7 @@ export type PublicProfileData = {
   username: string | null;
   display_name: string | null;
   bio: string | null;
+  avatar_url?: string | null;
 } | null;
 
 type Props = {
@@ -88,6 +89,22 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
           </div>
         </div>
 
+        {/* Profile photo */}
+        {profile?.avatar_url && (
+          <div className="publicProfileAvatarWrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={profile.avatar_url}
+              alt=""
+              className="publicProfileAvatar"
+              loading="eager"
+              decoding="async"
+              width={120}
+              height={120}
+            />
+          </div>
+        )}
+
         {/* Title */}
         <h1 className="publicProfileTitle">{displayName}</h1>
         {handle && <p className="publicProfileHandle">@{handle}</p>}
@@ -159,7 +176,7 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
 
         {/* CTAs */}
         <div className="publicProfileCTAs">
-          <Link href="/auth" className="publicProfileBtn publicProfileBtn--primary">
+          <Link href="/edit" className="publicProfileBtn publicProfileBtn--primary">
             Create your own QR profile
           </Link>
           <Link href="/" className="publicProfileBtn publicProfileBtn--ghost">

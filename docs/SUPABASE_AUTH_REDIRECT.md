@@ -6,15 +6,18 @@ Email confirmation was redirecting to localhost because Supabase uses **Site URL
 
 1. Open [Supabase Dashboard](https://supabase.com/dashboard) → your project.
 2. Go to **Authentication** → **URL Configuration**.
-3. Set **Site URL** to your production URL:
+3. Set **Site URL** to your production URL (use your actual Vercel URL, e.g. after renaming project to **smartqr**):
    ```
-   https://qr-app-theta-tawny.vercel.app
+   https://smartqr.vercel.app
    ```
+   Or your current project URL, e.g. `https://<your-project>.vercel.app`.
+
 4. Under **Redirect URLs**, add (one per line):
    ```
-   https://qr-app-theta-tawny.vercel.app/**
+   https://smartqr.vercel.app/**
    http://localhost:3001/**
    ```
+   (Replace with your actual production URL if different.)
    Click **Save**.
 
 ## 2. App (already done)

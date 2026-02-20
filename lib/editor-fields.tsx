@@ -67,14 +67,14 @@ const PLATFORM_TO_DB: Record<string, EditorField["key"]> = {
 };
 
 export const EDIT_FIELDS: EditorField[] = [
+  { key: "email", label: "Email", placeholder: PLATFORM_MAP.get("email" as PlatformKey)?.placeholder ?? "name@email.com", Icon: Mail },
+  { key: "phone", label: "Phone", placeholder: PLATFORM_MAP.get("phone" as PlatformKey)?.placeholder ?? "+1 555 555 555", Icon: Phone },
   { key: "whatsapp", label: "WhatsApp", placeholder: PLATFORM_MAP.get("whatsapp" as PlatformKey)?.placeholder ?? "+9715xxxxxxx", Icon: WhatsAppIcon },
+  { key: "telegram", label: "Telegram", placeholder: PLATFORM_MAP.get("telegram" as PlatformKey)?.placeholder ?? "@username", Icon: Send },
   { key: "facebook", label: "Facebook", placeholder: PLATFORM_MAP.get("facebook" as PlatformKey)?.placeholder ?? "profile name", Icon: Facebook },
   { key: "instagram", label: "IG", placeholder: PLATFORM_MAP.get("instagram" as PlatformKey)?.placeholder ?? "@username", Icon: Instagram },
   { key: "tiktok", label: "TikTok", placeholder: PLATFORM_MAP.get("tiktok" as PlatformKey)?.placeholder ?? "@username", Icon: TikTokIcon },
-  { key: "telegram", label: "Telegram", placeholder: PLATFORM_MAP.get("telegram" as PlatformKey)?.placeholder ?? "@username", Icon: Send },
-  { key: "linkedin", label: "LinkedIn", placeholder: PLATFORM_MAP.get("linkedin" as PlatformKey)?.placeholder ?? "in/username", Icon: Linkedin },
-  { key: "email", label: "Email", placeholder: PLATFORM_MAP.get("email" as PlatformKey)?.placeholder ?? "name@email.com", Icon: Mail },
-  { key: "phone", label: "Phone", placeholder: PLATFORM_MAP.get("phone" as PlatformKey)?.placeholder ?? "+1 555 555 555", Icon: Phone },
   { key: "x", label: "X", placeholder: PLATFORM_MAP.get("x" as PlatformKey)?.placeholder ?? "@username", Icon: XIcon },
+  { key: "linkedin", label: "LinkedIn", placeholder: PLATFORM_MAP.get("linkedin" as PlatformKey)?.placeholder ?? "in/username", Icon: Linkedin },
   { key: "website", label: "Website", placeholder: PLATFORM_MAP.get("website" as PlatformKey)?.placeholder ?? "your-site.com", Icon: Globe },
 ];

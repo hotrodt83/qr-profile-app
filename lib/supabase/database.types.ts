@@ -20,7 +20,15 @@ export type ProfilesRow = {
   phone_public?: boolean | null
   email_public?: boolean | null
   whatsapp_public?: boolean | null
+  facebook_public?: boolean | null
+  instagram_public?: boolean | null
+  tiktok_public?: boolean | null
+  telegram_public?: boolean | null
+  linkedin_public?: boolean | null
+  x_public?: boolean | null
+  website_public?: boolean | null
   email_verified?: boolean | null
+  face_descriptor?: number[] | null
   updated_at: string
 }
 
@@ -43,7 +51,15 @@ export type ProfilesInsert = {
   phone_public?: boolean | null
   email_public?: boolean | null
   whatsapp_public?: boolean | null
+  facebook_public?: boolean | null
+  instagram_public?: boolean | null
+  tiktok_public?: boolean | null
+  telegram_public?: boolean | null
+  linkedin_public?: boolean | null
+  x_public?: boolean | null
+  website_public?: boolean | null
   email_verified?: boolean | null
+  face_descriptor?: number[] | null
   updated_at?: string
 }
 
@@ -65,7 +81,15 @@ export type ProfilesUpdate = {
   phone_public?: boolean | null
   email_public?: boolean | null
   whatsapp_public?: boolean | null
+  facebook_public?: boolean | null
+  instagram_public?: boolean | null
+  tiktok_public?: boolean | null
+  telegram_public?: boolean | null
+  linkedin_public?: boolean | null
+  x_public?: boolean | null
+  website_public?: boolean | null
   email_verified?: boolean | null
+  face_descriptor?: number[] | null
   updated_at?: string
 }
 

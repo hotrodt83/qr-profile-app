@@ -1,73 +1,112 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useMemo } from "react";
-import { createBrowserClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import ClientOnly from "@/app/components/ClientOnly";
+import ErrorBoundary from "@/app/components/ErrorBoundary";
 import QRProfile from "@/app/components/QRProfile";
 import FloatingSocialIcons from "@/app/components/FloatingSocialIcons";
-import LandingModal from "@/app/components/LandingModal";
+import RuntimeErrorLogger from "@/app/components/RuntimeErrorLogger";
+import LandingTitleBrain, { type LandingTitleTheme } from "@/app/components/LandingTitleBrain";
+import { createBrowserClient } from "@/lib/supabase/client";
+import { useHasProfile } from "@/lib/useHasProfile";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 type Props = {
   qrValue: string;
 };
 
-export default function LandingWithModal({ qrValue: qrValueProp }: Props) {
-  const qrValue = qrValueProp && qrValueProp.trim() !== "" ? qrValueProp : "http://localhost:3001/";
-  const [modalOpen, setModalOpen] = useState(false);
-  const [session, setSession] = useState<{ user: { id: string } } | null>(null);
-
-  const supabase = useMemo(() => {
-    try {
-      return createBrowserClient();
-    } catch {
-      return null;
-    }
-  }, []);
-
-  function refetchSessionAndShowEditForm() {
-    if (!supabase) return;
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-    });
-  }
+function LandingWithModalInner({ qrValue: qrValueProp }: Props) {
+  const router = useRouter();
+  const [supabase, setSupabase] = useState<ReturnType<typeof createBrowserClient> | null>(null);
+  const navInFlightRef = useRef(false);
+  const { hasProfile, profile, loading: profileLoading } = useHasProfile();
 
   useEffect(() => {
-    if (!supabase) return;
-    refetchSessionAndShowEditForm();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      refetchSessionAndShowEditForm();
-    });
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+    setSupabase(createBrowserClient());
+  }, []);
+
+  const isFirstTimeUser = !profileLoading && !hasProfile;
+
+  const authEmailNext = "/auth/email?next=" + encodeURIComponent("/verify?next=" + encodeURIComponent("/create"));
+
+  const handleQrClick = useCallback(async () => {
+    if (navInFlightRef.current) return;
+    navInFlightRef.current = true;
+    try {
+      if (!supabase) {
+        router.push(authEmailNext);
+        return;
+      }
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
+        router.push(authEmailNext);
+        return;
+      }
+      if (!hasProfile) {
+        router.push("/create");
+        return;
+      }
+      router.push("/verify?next=" + encodeURIComponent("/edit"));
+    } catch {
+      router.push(authEmailNext);
+    } finally {
+      navInFlightRef.current = false;
+    }
+  }, [supabase, router, hasProfile]);
+
+  const qrValue =
+    qrValueProp && qrValueProp.trim() !== ""
+      ? qrValueProp
+      : `${getBaseUrl().replace(/\/$/, "").trim()}/`;
+
+  const profileUrl = hasProfile && profile?.username?.trim()
+    ? `${getBaseUrl().replace(/\/$/, "").trim()}/u/${encodeURIComponent(profile.username.trim())}`
+    : undefined;
+
+  /** Landing wordmark colour. Options: cyan (matches project), futuristic, gold, violet, mint, coral. */
+  const titleTheme: LandingTitleTheme = "cyan";
 
   return (
-    <>
-      <main className="landingContainer" role="main">
-        <h1 className="landingTitle">SmartQR</h1>
-        <p className="landingTagline">Your identity in one scan.</p>
-        <div className="ctaRow">
-          <Link href="/edit" className="landingBtn landingBtnPrimary">
-            Create your SmartQR
-          </Link>
+    <main className="landingContainer" role="main">
+      <RuntimeErrorLogger />
+      <h1 className="landingTitle" data-theme={titleTheme}>
+        <span className="landingTitleText">SMART</span>
+        <LandingTitleBrain theme={titleTheme} />
+        <span className="landingTitleText">R</span>
+      </h1>
+      <p className="landingTagline">Your identity in one scan.</p>
+      <div className="ctaRow">
+        <Link href="/create" className="landingBtn landingBtnPrimary">
+          Create SmartQR
+        </Link>
+      </div>
+      <div className="qrStage qrStage--landing">
+        <div className="qrOrbit">
+          <FloatingSocialIcons />
         </div>
-        <div className="qrStage">
-          <div className="qrOrbit">
-            <FloatingSocialIcons />
-          </div>
-          <div className="qrCenter relative z-10">
-            <QRProfile value={qrValue} />
-          </div>
+        <div className="qrCenter relative z-10">
+          <QRProfile
+            value={profileUrl ?? qrValue}
+            onClick={isFirstTimeUser ? undefined : handleQrClick}
+            href={isFirstTimeUser ? undefined : profileUrl}
+            disabled={isFirstTimeUser}
+            title={isFirstTimeUser ? "Create your SmartQR first" : undefined}
+          />
         </div>
-      </main>
+      </div>
+    </main>
+  );
+}
 
-      <LandingModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        isAuthed={!!session}
-        onAuthed={refetchSessionAndShowEditForm}
-        userId={session?.user?.id ?? null}
-        supabase={supabase}
-      />
-    </>
+export default function LandingWithModal(props: Props) {
+  return (
+    <ErrorBoundary>
+      <ClientOnly>
+        <LandingWithModalInner {...props} />
+      </ClientOnly>
+    </ErrorBoundary>
   );
 }

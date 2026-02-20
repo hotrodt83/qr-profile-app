@@ -1,14 +1,18 @@
 {
-  "name": "qr-app",
+  "name": "smartqr",
   "version": "0.1.0",
   "private": true,
+  "description": "SmartQR identity platform",
   "engines": {
     "node": ">=18.17.0"
   },
   "scripts": {
     "dev": "next dev -p 3001",
     "dev:alt": "next dev -p 3000",
+    "dev:3002": "next dev -p 3002",
     "dev:clean": "rm -rf .next && next dev -p 3001",
+    "dev:port": "bash scripts/dev-clean-port.sh",
+    "nuclear": "bash scripts/nuclear-refresh.sh",
     "build": "next build",
     "start": "next start",
     "generate-qr": "node scripts/generate-personalized-qr.js",
@@ -16,11 +20,14 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "@tensorflow/tfjs": "^4.22.0",
+    "encoding": "^0.1.13",
+    "face-api.js": "^0.22.2",
     "lucide-react": "^0.569.0",
-    "next": "14.1.0",
+    "next": "^14.1.0",
     "qrcode": "^1.5.4",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-qr-code": "^2.0.18"
   },
   "devDependencies": {
@@ -29,13 +36,13 @@
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "eslint-config-prettier": "^10.1.8",
+    "jimp": "^0.22.12",
+    "jsqr": "^1.4.0",
+    "playwright": "^1.49.0",
     "prettier": "^3.8.1",
     "tailwindcss": "^3.4.17",
     "typescript": "5.9.3",
-    "vercel": "^50.18.0",
-    "jimp": "^0.22.12",
-    "jsqr": "^1.4.0",
-    "playwright": "^1.49.0"
+    "vercel": "^50.18.0"
   },
   "type": "module"
 }

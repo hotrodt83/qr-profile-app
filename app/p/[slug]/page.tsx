@@ -24,7 +24,9 @@ export default async function PublicProfilePage({ params }: Props) {
 
   const links = LINK_KEYS.filter((key) => {
     const v = profile[key];
-    return v != null && String(v).trim() !== "";
+    const pubKey = `${key}_public`;
+    const isPublic = profile[pubKey as keyof typeof profile];
+    return v != null && String(v).trim() !== "" && !!isPublic;
   }).map((key) => {
     const value = String(profile[key]).trim();
     const href = getProfileLink(key as PlatformKey, value);

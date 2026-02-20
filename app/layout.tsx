@@ -3,10 +3,18 @@ import "./globals.css";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const siteDescription =
-  "Create a personal QR profile. Share socials and contact details in one scan.";
+  "Create a personal SmartQR profile. Share socials and contact details in one scan.";
+
+function getSafeBaseUrl(): string {
+  try {
+    const url = getBaseUrl();
+    if (url && typeof url === "string" && url.startsWith("http")) return url.trim();
+  } catch (_) { }
+  return "http://localhost:3001";
+}
 
 export const metadata = {
-  metadataBase: new URL(getBaseUrl()),
+  metadataBase: new URL(getSafeBaseUrl()),
   title: "SmartQR",
   description: siteDescription,
   openGraph: {

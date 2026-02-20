@@ -1,6 +1,6 @@
-# Personal QR Profile
+# SmartQR
 
-One QR code for your contact and social links. You choose what’s visible. No app required to scan.
+Your identity in one scan. One QR code for your contact and social links. You choose what’s visible. No app required to scan.
 
 ## Stack
 
@@ -19,7 +19,7 @@ One QR code for your contact and social links. You choose what’s visible. No a
 2. **Env**
    - Copy `.env.example` to `.env.local`.
    - Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-   - Optionally set `NEXT_PUBLIC_APP_URL` (e.g. `https://yourapp.com`) for QR/link domain.
+   - For production (e.g. Vercel), set `NEXT_PUBLIC_SITE_URL` to your public URL (e.g. `https://smartqr.vercel.app`) so QR codes and share links use it. Locally use `http://localhost:3001`.
 
 3. **Run**
    - `npm install`
@@ -30,11 +30,24 @@ One QR code for your contact and social links. You choose what’s visible. No a
    or: `rm -rf .next` then `npm run dev`.  
    If port 3001 is in use, run `npm run dev:alt` for port 3000.
 
+## Auth & user flow
+
+**Authentication is email-only** (Supabase OTP or magic link). No SMS, no phone, no Twilio.
+
+- **New user**: Landing → **Create SmartQR** → Edit → Save → confirmation → auto-redirect to **Share**.
+- **Returning user**: Landing → **My SmartQR / Edit** → email verification → Edit → Save → auto-redirect to Share.
+- After successful save we always redirect to Share. Verification is email-only; resend is rate-limited.
+
 ## Flow
 
-- **Home** (`/`): Landing; redirects to dashboard if signed in.
-- **Auth** (`/auth`): Sign up / sign in (email + password).
-- **Dashboard** (`/dashboard`): Edit display name, avatar URL, and all contact/social fields; toggle “Show on profile” per field; see QR and profile link; save.
-- **Public profile** (`/p/[slug]`): What scanners see — one-tap Call, Email, open link, or “Add to contacts” (vCard).
+- **Home** (`/`): Landing with "Create SmartQR" and "My SmartQR / Edit".
+- **Edit** (`/edit`): Edit profile; guests must sign in (email OTP) to save.
+- **Share** (`/share`): After save — Email, QR code, Copy URL.
+- **Public profile** (`/u/[username]`): What scanners see.
 
-Each user has one profile and one permanent `/p/[slug]`. Updating the profile updates the page at that URL; the QR code does not change.
+Each user has one profile. Updating the profile updates `/u/[username]`.
+
+## Vercel (production)
+
+- **Project name**: You can rename the Vercel project to **smartqr** in [Vercel Dashboard](https://vercel.com) → Project Settings → General → Project Name. The app does not depend on the project name; all URLs come from `NEXT_PUBLIC_SITE_URL`.
+- After renaming, set **Production** env var `NEXT_PUBLIC_SITE_URL` to your new URL (e.g. `https://smartqr.vercel.app`) and redeploy. QR and share links will use that URL.

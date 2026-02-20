@@ -1,5 +1,5 @@
 /**
- * Personalized QR Code Generator for qr-app
+ * Personalized QR Code Generator for SmartQR
  * Run with: node scripts/generate-personalized-qr.js
  */
 
@@ -9,8 +9,8 @@ const fs = require('fs');
 
 // ===== CUSTOMIZE YOUR QR CODE HERE =====
 const CONFIG = {
-  // Content to encode (URL, text, email, etc.)
-  data: 'https://qr-app.vercel.app', // Change to your app URL, GitHub, or any link
+  // Content to encode (URL, text, email, etc.) — use NEXT_PUBLIC_SITE_URL in production
+  data: 'https://smartqr.vercel.app', // Change to your app URL, GitHub, or any link
   
   // Personalized color scheme - modern teal & warm cream
   colors: {
@@ -30,7 +30,7 @@ const CONFIG = {
 
 async function generateQR() {
   const outputDir = path.join(__dirname, '..', 'public');
-  const outputPath = path.join(outputDir, 'qr-app-personalized.png');
+  const outputPath = path.join(outputDir, 'smartqr-personalized.png');
 
   // Ensure public directory exists
   if (!fs.existsSync(outputDir)) {
@@ -48,7 +48,7 @@ async function generateQR() {
   try {
     await QRCode.toFile(outputPath, CONFIG.data, options);
     console.log('✅ Personalized QR code generated!');
-    console.log('   Saved to: public/qr-app-personalized.png');
+    console.log('   Saved to: public/smartqr-personalized.png');
     console.log('   Encodes: ' + CONFIG.data);
   } catch (err) {
     console.error('Error generating QR code:', err);

@@ -149,11 +149,17 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
         const result = await fetchProfileByUserId(supabase, userId);
         if (cancelled) return;
         if (result.error) {
-          const errMsg = result.error instanceof Error ? result.error.message : String(result.error);
+          const err = result.error as { message?: string };
+          const errMsg =
+            result.error instanceof Error
+              ? result.error.message
+              : typeof err?.message === "string" && err.message
+                ? err.message
+                : "Failed to load profile";
           if (process.env.NODE_ENV === "development") {
             console.error("[EditLinksForm] fetch profile error:", result.error);
           }
-          setLoadError(errMsg || "Failed to load profile");
+          setLoadError(errMsg);
           const draft = persistDraft ? loadCreateDraft() : null;
           setForm(draft?.form ?? getEmptyForm());
           setPrivacy(draft?.privacy ?? getInitialPrivacy());

@@ -33,8 +33,19 @@ function isRateLimited(id: string): boolean {
   return false;
 }
 
+// Allow public access to landing, create, edit, share, and auth pages
+const publicRoutes = ["/", "/create", "/edit", "/share", "/auth/email", "/verify"];
+
 export function middleware(request: NextRequest) {
+  // Never redirect away when user is in face enroll flow
+  if (request.nextUrl.searchParams.get("enroll") === "face") {
+    console.log("[MW] bypass enroll=face");
+    return NextResponse.next();
+  }
   const path = request.nextUrl.pathname;
+  if (publicRoutes.includes(path) || path.startsWith("/auth/") || path.startsWith("/verify")) {
+    return NextResponse.next();
+  }
   if (!path.startsWith("/u/")) {
     return NextResponse.next();
   }
@@ -46,5 +57,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/u/:path*"],
+  matcher: ["/", "/create", "/edit", "/share", "/verify", "/auth/:path*", "/u/:path*"],
 };
