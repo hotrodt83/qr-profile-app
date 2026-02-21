@@ -1,13 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
-import { EDIT_FIELDS } from "@/lib/editor-fields";
-
-const isOn = (v: unknown) => v === true || v === "true" || v === 1;
-const stripAt = (s: string) => String(s).replace(/^@+/, "").trim();
-const ensureHttps = (url: string) =>
-  url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
 
 export type PublicProfileData = {
   id: string;
@@ -15,84 +8,110 @@ export type PublicProfileData = {
   display_name: string | null;
   bio: string | null;
   avatar_url?: string | null;
-  phone?: string | null;
   email?: string | null;
+  phone?: string | null;
   whatsapp?: string | null;
   telegram?: string | null;
-  instagram?: string | null;
   facebook?: string | null;
+  instagram?: string | null;
+  tiktok?: string | null;
   x?: string | null;
+  linkedin?: string | null;
   website?: string | null;
-  phone_public?: unknown;
-  email_public?: unknown;
-  whatsapp_public?: unknown;
-  telegram_public?: unknown;
-  instagram_public?: unknown;
-  facebook_public?: unknown;
-  x_public?: unknown;
-  website_public?: unknown;
 } | null;
 
-type ContactItem = { label: string; href: string; value: string };
+type ContactItem = {
+  label: string;
+  href: string;
+  value: string;
+};
 
 type Props = {
   profile: PublicProfileData;
   username: string;
   publicUrl: string;
-  /** When true, show "Invalid link" and QR points to publicUrl (e.g. home). */
-  invalidLink?: boolean;
-  /** Profile URL for vCard. */
-  profileUrl?: string;
 };
 
-export default function PublicProfileClient({ profile, username, publicUrl, invalidLink, profileUrl }: Props) {
-  const [copied, setCopied] = useState(false);
-  const isEmpty = !profile || invalidLink;
+function stripAt(s: string): string {
+  return s.replace(/^@+/, "").trim();
+}
 
-  const items: ContactItem[] = profile
-    ? [
-        profile.phone && (profile.phone_public == null || isOn(profile.phone_public)) && {
-          label: "Phone",
-          href: `tel:${profile.phone}`,
-          value: profile.phone,
-        },
-        profile.email && (profile.email_public == null || isOn(profile.email_public)) && {
-          label: "Email",
-          href: `mailto:${profile.email}`,
-          value: profile.email,
-        },
-        profile.whatsapp && (profile.whatsapp_public == null || isOn(profile.whatsapp_public)) && {
-          label: "WhatsApp",
-          href: `https://wa.me/${String(profile.whatsapp).replace(/[^0-9]/g, "")}`,
-          value: profile.whatsapp,
-        },
-        profile.telegram && (profile.telegram_public == null || isOn(profile.telegram_public)) && {
-          label: "Telegram",
-          href: `https://t.me/${stripAt(profile.telegram)}`,
-          value: profile.telegram,
-        },
-        profile.instagram && (profile.instagram_public == null || isOn(profile.instagram_public)) && {
-          label: "Instagram",
-          href: `https://instagram.com/${stripAt(profile.instagram)}`,
-          value: profile.instagram,
-        },
-        profile.facebook && (profile.facebook_public == null || isOn(profile.facebook_public)) && {
-          label: "Facebook",
-          href: `https://facebook.com/${stripAt(profile.facebook)}`,
-          value: profile.facebook,
-        },
-        profile.x && (profile.x_public == null || isOn(profile.x_public)) && {
-          label: "X",
-          href: `https://x.com/${stripAt(profile.x)}`,
-          value: profile.x,
-        },
-        profile.website && (profile.website_public == null || isOn(profile.website_public)) && {
-          label: "Website",
-          href: ensureHttps(profile.website),
-          value: profile.website,
-        },
-      ].filter(Boolean) as ContactItem[]
-    : [];
+function ensureHttps(url: string): string {
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `https://${url}`;
+}
+
+function buildContactItems(profile: NonNullable<PublicProfileData>): ContactItem[] {
+  const items: ContactItem[] = [];
+
+  if (profile.email) {
+    items.push({ label: "Email", href: `mailto:${profile.email}`, value: profile.email });
+  }
+  if (profile.phone) {
+    items.push({ label: "Phone", href: `tel:${profile.phone}`, value: profile.phone });
+  }
+  if (profile.whatsapp) {
+    items.push({
+      label: "WhatsApp",
+      href: `https://wa.me/${profile.whatsapp.replace(/[^0-9]/g, "")}`,
+      value: profile.whatsapp,
+    });
+  }
+  if (profile.telegram) {
+    items.push({
+      label: "Telegram",
+      href: `https://t.me/${stripAt(profile.telegram)}`,
+      value: profile.telegram,
+    });
+  }
+  if (profile.facebook) {
+    items.push({
+      label: "Facebook",
+      href: `https://facebook.com/${stripAt(profile.facebook)}`,
+      value: profile.facebook,
+    });
+  }
+  if (profile.instagram) {
+    items.push({
+      label: "Instagram",
+      href: `https://instagram.com/${stripAt(profile.instagram)}`,
+      value: profile.instagram,
+    });
+  }
+  if (profile.tiktok) {
+    items.push({
+      label: "TikTok",
+      href: `https://tiktok.com/@${stripAt(profile.tiktok)}`,
+      value: profile.tiktok,
+    });
+  }
+  if (profile.x) {
+    items.push({
+      label: "X",
+      href: `https://x.com/${stripAt(profile.x)}`,
+      value: profile.x,
+    });
+  }
+  if (profile.linkedin) {
+    items.push({
+      label: "LinkedIn",
+      href: `https://linkedin.com/in/${stripAt(profile.linkedin)}`,
+      value: profile.linkedin,
+    });
+  }
+  if (profile.website) {
+    items.push({
+      label: "Website",
+      href: ensureHttps(profile.website),
+      value: profile.website,
+    });
+  }
+
+  return items;
+}
+
+export default function PublicProfileClient({ profile, username, publicUrl }: Props) {
+  const [copied, setCopied] = useState(false);
 
   const copyLink = useCallback(() => {
     navigator.clipboard.writeText(publicUrl).then(() => {
@@ -101,80 +120,67 @@ export default function PublicProfileClient({ profile, username, publicUrl, inva
     });
   }, [publicUrl]);
 
-  const displayName = invalidLink ? "Invalid link" : (profile?.display_name || profile?.username || username || "Profile");
-  const handle = invalidLink ? undefined : (profile?.username || username);
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-white/60">Profile not found</p>
+      </div>
+    );
+  }
+
+  const displayName = profile.display_name || profile.username || username;
+  const items = buildContactItems(profile);
 
   return (
-    <div className="publicProfileShell">
-      <div className="publicProfileCard">
-        {profile?.avatar_url && (
-          <div className="publicProfileAvatarWrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+    <div className="min-h-screen bg-black text-white">
+      <div className="max-w-md mx-auto px-4 py-12">
+        {profile.avatar_url && (
+          <div className="flex justify-center mb-6">
             <img
               src={profile.avatar_url}
               alt=""
-              className="publicProfileAvatar"
-              loading="eager"
-              decoding="async"
-              width={120}
-              height={120}
+              className="w-24 h-24 rounded-full object-cover"
+              width={96}
+              height={96}
             />
           </div>
         )}
 
-        <h1 className="publicProfileTitle">{displayName}</h1>
-        {handle && <p className="publicProfileHandle">@{handle}</p>}
+        <h1 className="text-2xl font-bold text-center">{displayName}</h1>
 
-        {!invalidLink && profile?.bio ? (
-          <p className="publicProfileBio">{profile.bio}</p>
-        ) : isEmpty ? (
-          <p className="publicProfileEmptyMessage">{invalidLink ? "This link isn’t valid. Use the QR to go home or create your profile." : "Profile coming soon"}</p>
-        ) : null}
-
-        {/* Placeholder links (empty state only) */}
-        {isEmpty && !invalidLink && (
-          <div className="publicProfileLinks">
-            {EDIT_FIELDS.slice(0, 6).map(({ key, label, Icon }) => (
-              <div key={key} className="publicProfileLinkItem publicProfileLinkItem--disabled">
-                <span className="publicProfileLinkIcon"><Icon size={20} /></span>
-                <span>{label}</span>
-                <span className="publicProfileLinkPlaceholder">Not set yet</span>
-              </div>
-            ))}
-          </div>
+        {profile.username && (
+          <p className="text-white/60 text-center mt-1">@{profile.username}</p>
         )}
 
-        {/* Visible contact items (value exists + public flag not set or true) */}
-        {!isEmpty && items.length > 0 && (
-          <div className="mt-6 flex flex-col gap-3 w-full max-w-sm mx-auto">
-            {items.map((it) => (
+        {profile.bio && (
+          <p className="text-white/80 text-center mt-4">{profile.bio}</p>
+        )}
+
+        {items.length > 0 && (
+          <div className="mt-8 space-y-3">
+            {items.map((item) => (
               <a
-                key={it.label}
-                href={it.href}
-                target={it.href.startsWith("http") ? "_blank" : undefined}
-                rel={it.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                className="w-full rounded-xl bg-neutral-800 hover:bg-neutral-700 transition px-4 py-3 flex items-center justify-between"
+                key={item.label}
+                href={item.href}
+                target={item.href.startsWith("http") ? "_blank" : undefined}
+                rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="block w-full rounded-xl bg-neutral-800 hover:bg-neutral-700 transition px-4 py-3"
               >
-                <span className="font-medium">{it.label}</span>
-                <span className="opacity-80">{it.value}</span>
+                <span className="font-medium">{item.label}</span>
+                <span className="float-right text-white/70">{item.value}</span>
               </a>
             ))}
           </div>
         )}
 
-        <div className="publicProfileActions">
-          <button type="button" onClick={copyLink} className="publicProfileBtn publicProfileBtn--secondary">
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={copyLink}
+            className="px-6 py-2 rounded-full bg-neutral-800 hover:bg-neutral-700 transition text-sm"
+          >
             {copied ? "Copied!" : "Share"}
           </button>
-        </div>
-
-        <div className="publicProfileCTAs">
-          <Link
-            href={`/auth/email?ref=${encodeURIComponent(handle ?? username)}`}
-            className="publicProfileBtn publicProfileBtn--primary"
-          >
-            Create your own QR profile
-          </Link>
         </div>
       </div>
     </div>

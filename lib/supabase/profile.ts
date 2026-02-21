@@ -226,6 +226,44 @@ export async function ensureProfileExists(
   return { data: data ?? null, error }
 }
 
+/** Public profile data returned by get_public_profile SQL function */
+export type PublicProfile = {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  phone: string | null;
+  whatsapp: string | null;
+  telegram: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  x_handle: string | null;
+  linkedin: string | null;
+  website: string | null;
+};
+
+/** Fetch public profile via SQL function - returns only fields marked as public */
+export async function fetchPublicProfileByUsername(
+  supabase: SupabaseClient<Database>,
+  username: string
+): Promise<PublicProfile | null> {
+  const { data, error } = await supabase.rpc("get_public_profile", {
+    p_username: username,
+  });
+  if (error) {
+    console.error("[profile] get_public_profile error:", error);
+    return null;
+  }
+  if (!data || (Array.isArray(data) && data.length === 0)) {
+    return null;
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  return row as PublicProfile;
+}
+
 /** Update only face descriptor for owner verification (enrollment). */
 export async function updateFaceDescriptor(
   supabase: SupabaseClient<Database>,
