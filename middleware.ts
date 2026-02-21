@@ -33,9 +33,6 @@ function isRateLimited(id: string): boolean {
   return false;
 }
 
-const PROTECTED_ROUTES = ["/edit", "/dashboard"];
-const AUTH_ROUTE = "/auth/email";
-
 function hasSupabaseSession(req: NextRequest): boolean {
   const allCookies = req.cookies.getAll();
   for (const cookie of allCookies) {
@@ -53,45 +50,45 @@ function hasSupabaseSession(req: NextRequest): boolean {
   return false;
 }
 
-function isProtectedRoute(path: string): boolean {
-  return PROTECTED_ROUTES.some((r) => path === r || path.startsWith(r + "/"));
+function isPublicRoute(pathname: string): boolean {
+  if (pathname === "/") return true;
+  if (pathname === "/create") return true;
+  if (pathname.startsWith("/u/")) return true;
+  if (pathname.startsWith("/p/")) return true;
+  if (pathname.startsWith("/auth/")) return true;
+  if (pathname.startsWith("/verify")) return true;
+  if (pathname.startsWith("/secure")) return true;
+  if (pathname.startsWith("/api/")) return true;
+  return false;
+}
+
+function isProtectedRoute(pathname: string): boolean {
+  if (pathname === "/edit" || pathname.startsWith("/edit/")) return true;
+  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return true;
+  return false;
 }
 
 export function middleware(request: NextRequest) {
-  if (request.nextUrl.searchParams.get("enroll") === "face") {
+  const pathname = request.nextUrl.pathname;
+
+  if (isPublicRoute(pathname)) {
+    if (pathname.startsWith("/u/")) {
+      const clientId = getClientId(request);
+      if (isRateLimited(clientId)) {
+        return new NextResponse("Too Many Requests", { status: 429 });
+      }
+    }
     return NextResponse.next();
   }
 
-  const path = request.nextUrl.pathname;
-
-  if (isProtectedRoute(path)) {
-    const isAuthed = hasSupabaseSession(request);
-
-    if (!isAuthed) {
+  if (isProtectedRoute(pathname)) {
+    if (!hasSupabaseSession(request)) {
       const url = request.nextUrl.clone();
-      url.pathname = AUTH_ROUTE;
-      url.searchParams.set("next", path);
+      url.pathname = "/auth/email";
+      url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
-
     return NextResponse.next();
-  }
-
-  if (
-    path === "/" ||
-    path === "/create" ||
-    path.startsWith("/auth/")
-  ) {
-    return NextResponse.next();
-  }
-
-  if (!path.startsWith("/u/")) {
-    return NextResponse.next();
-  }
-
-  const clientId = getClientId(request);
-  if (isRateLimited(clientId)) {
-    return new NextResponse("Too Many Requests", { status: 429 });
   }
 
   return NextResponse.next();
@@ -104,6 +101,9 @@ export const config = {
     "/edit/:path*",
     "/dashboard/:path*",
     "/auth/:path*",
+    "/verify/:path*",
+    "/secure/:path*",
     "/u/:path*",
+    "/p/:path*",
   ],
 };
