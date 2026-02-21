@@ -5,7 +5,7 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-const SAFE_NEXT = ["/", "/create", "/edit", "/verify"];
+const SAFE_NEXT = ["/", "/create", "/edit", "/dashboard"];
 const RESEND_COOLDOWN_SEC = 60;
 const REF_STORAGE_KEY = "smartqr_ref";
 

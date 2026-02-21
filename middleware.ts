@@ -35,7 +35,6 @@ function isRateLimited(id: string): boolean {
 
 const PROTECTED_ROUTES = ["/edit", "/dashboard"];
 const AUTH_ROUTE = "/auth/email";
-const STEPUP_COOKIE = "smartqr_stepup";
 
 function hasSupabaseSession(req: NextRequest): boolean {
   const allCookies = req.cookies.getAll();
@@ -52,14 +51,6 @@ function hasSupabaseSession(req: NextRequest): boolean {
     }
   }
   return false;
-}
-
-function isStepUpVerified(req: NextRequest): boolean {
-  const stepupCookie = req.cookies.get(STEPUP_COOKIE);
-  if (!stepupCookie?.value) return false;
-  const ts = parseInt(stepupCookie.value, 10);
-  if (isNaN(ts)) return stepupCookie.value === "1";
-  return Date.now() < ts;
 }
 
 function isProtectedRoute(path: string): boolean {
@@ -83,22 +74,13 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (!isStepUpVerified(request)) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/secure";
-      url.searchParams.set("next", path);
-      return NextResponse.redirect(url);
-    }
-
     return NextResponse.next();
   }
 
   if (
     path === "/" ||
     path === "/create" ||
-    path.startsWith("/auth/") ||
-    path.startsWith("/verify") ||
-    path.startsWith("/secure")
+    path.startsWith("/auth/")
   ) {
     return NextResponse.next();
   }
@@ -121,9 +103,7 @@ export const config = {
     "/create",
     "/edit/:path*",
     "/dashboard/:path*",
-    "/verify/:path*",
     "/auth/:path*",
-    "/secure/:path*",
     "/u/:path*",
   ],
 };

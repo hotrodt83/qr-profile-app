@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import ClientOnly from "@/app/components/ClientOnly";
 import ErrorBoundary from "@/app/components/ErrorBoundary";
 import QRProfile from "@/app/components/QRProfile";
@@ -16,47 +16,19 @@ type Props = {
   isAuthed?: boolean;
 };
 
-const STEPUP_COOKIE = "smartqr_stepup";
-
-function checkStepUpCookie(): boolean {
-  if (typeof document === "undefined") return false;
-  const cookies = document.cookie.split(";");
-  for (const cookie of cookies) {
-    const [name, value] = cookie.trim().split("=");
-    if (name === STEPUP_COOKIE && value) {
-      const ts = parseInt(value, 10);
-      if (isNaN(ts)) return value === "1";
-      return Date.now() < ts;
-    }
-  }
-  return false;
-}
-
 function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props) {
   const router = useRouter();
   const navInFlightRef = useRef(false);
-  const [stepUpOk, setStepUpOk] = useState(false);
 
-  useEffect(() => {
-    if (isAuthed) {
-      setStepUpOk(checkStepUpCookie());
-    }
-  }, [isAuthed]);
-
-  const authEmailNext = "/auth/email?next=" + encodeURIComponent("/verify?next=" + encodeURIComponent("/create"));
-  const secureEditNext = "/secure?next=" + encodeURIComponent("/edit");
+  const authEmailNext = "/auth/email?next=" + encodeURIComponent("/create");
 
   const handleQrClick = useCallback(() => {
     if (!isAuthed) return;
     if (navInFlightRef.current) return;
     navInFlightRef.current = true;
-    if (stepUpOk) {
-      router.push("/edit");
-    } else {
-      router.push(secureEditNext);
-    }
+    router.push("/edit");
     navInFlightRef.current = false;
-  }, [isAuthed, stepUpOk, router, secureEditNext]);
+  }, [isAuthed, router]);
 
   const qrValue =
     qrValueProp && qrValueProp.trim() !== ""
@@ -65,7 +37,7 @@ function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props
 
   const titleTheme: LandingTitleTheme = "qr";
 
-  const createHref = isAuthed ? secureEditNext : authEmailNext;
+  const createHref = isAuthed ? "/edit" : authEmailNext;
 
   return (
     <main className="landingContainer" role="main">

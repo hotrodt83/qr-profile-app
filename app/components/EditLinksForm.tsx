@@ -112,7 +112,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const [toastSuccess, setToastSuccess] = useState(false);
   const [form, setForm] = useState<Record<string, string>>(getEmptyForm);
   const [privacy, setPrivacy] = useState<PrivacyState>(getInitialPrivacy);
-  const [emailVerified, setEmailVerified] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -145,7 +144,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           setLoading(false);
           return;
         }
-        setEmailVerified(!!(user as { email_confirmed_at?: string } | null)?.email_confirmed_at);
         
         // Ensure profile row exists (creates with minimal defaults if missing)
         const ensureResult = await ensureProfileExists(supabase, userId, user.email);
@@ -400,7 +398,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       display_name: form.display_name?.trim() || null,
       bio: form.bio?.trim() || null,
       avatar_url: avatarUrl ?? null,
-      email_verified: emailVerified,
+      email_verified: true,
     };
     EDIT_FIELDS.forEach(({ key }) => {
       const v = form[key]?.trim();
@@ -533,7 +531,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       display_name: form.display_name?.trim() || null,
       bio: form.bio?.trim() || null,
       avatar_url: url,
-      email_verified: emailVerified,
+      email_verified: true,
     };
     EDIT_FIELDS.forEach(({ key }) => {
       const v = form[key]?.trim();
