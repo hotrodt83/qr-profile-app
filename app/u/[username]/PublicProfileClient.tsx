@@ -1,7 +1,5 @@
 "use client";
 
-import { useCallback, useState } from "react";
-
 export type PublicProfileData = {
   id: string;
   username: string | null;
@@ -29,7 +27,6 @@ type ContactItem = {
 type Props = {
   profile: PublicProfileData;
   username: string;
-  publicUrl: string;
 };
 
 function stripAt(s: string): string {
@@ -110,16 +107,7 @@ function buildContactItems(profile: NonNullable<PublicProfileData>): ContactItem
   return items;
 }
 
-export default function PublicProfileClient({ profile, username, publicUrl }: Props) {
-  const [copied, setCopied] = useState(false);
-
-  const copyLink = useCallback(() => {
-    navigator.clipboard.writeText(publicUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, [publicUrl]);
-
+export default function PublicProfileClient({ profile, username }: Props) {
   if (!profile) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -172,16 +160,6 @@ export default function PublicProfileClient({ profile, username, publicUrl }: Pr
             ))}
           </div>
         )}
-
-        <div className="mt-8 flex justify-center">
-          <button
-            type="button"
-            onClick={copyLink}
-            className="px-6 py-2 rounded-full bg-neutral-800 hover:bg-neutral-700 transition text-sm"
-          >
-            {copied ? "Copied!" : "Share"}
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { createServerClient, isSupabaseConfigured, getPublicAvatarUrl } from "@/lib/supabase/server";
 import { fetchPublicProfileByUsername } from "@/lib/supabase/profile";
-import { getBaseUrl } from "@/lib/getBaseUrl";
 import PublicProfileClient, { type PublicProfileData } from "./PublicProfileClient";
 
 type Props = {
@@ -51,14 +50,10 @@ export default async function PublicProfilePage({ params }: Props) {
     }
   }
 
-  const baseUrl = getBaseUrl();
-  const publicUrl = `${baseUrl}/u/${encodeURIComponent(decodedUsername)}`;
-
   return (
     <PublicProfileClient
       profile={profile}
       username={decodedUsername}
-      publicUrl={publicUrl}
     />
   );
 }
