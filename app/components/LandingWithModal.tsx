@@ -9,6 +9,7 @@ import QRProfile from "@/app/components/QRProfile";
 import FloatingSocialIcons from "@/app/components/FloatingSocialIcons";
 import RuntimeErrorLogger from "@/app/components/RuntimeErrorLogger";
 import LandingTitleBrain, { type LandingTitleTheme } from "@/app/components/LandingTitleBrain";
+import BuildStamp from "@/app/components/BuildStamp";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 type Props = {
@@ -67,6 +68,7 @@ function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props
           />
         </div>
       </div>
+      <BuildStamp />
     </main>
   );
 }

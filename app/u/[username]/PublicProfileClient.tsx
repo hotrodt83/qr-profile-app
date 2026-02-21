@@ -1,5 +1,7 @@
 "use client";
 
+import BuildStamp from "@/app/components/BuildStamp";
+
 export type PublicProfileData = {
   id: string;
   username: string | null;
@@ -161,6 +163,7 @@ export default function PublicProfileClient({ profile, username }: Props) {
           </div>
         )}
       </div>
+      <BuildStamp />
     </div>
   );
 }
