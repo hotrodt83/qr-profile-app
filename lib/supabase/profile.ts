@@ -342,7 +342,7 @@ export async function upsertProfileLinks(
 
   const { data, error } = await supabase
     .from("profile_links")
-    .upsert(rows, { onConflict: "user_id,platform" })
+    .upsert(rows as any, { onConflict: "user_id,platform" })
     .select()
 
   if (error) {
