@@ -1,21 +1,25 @@
 'use client';
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
-export function createBrowserClient() {
+let browserClient: SupabaseClient<Database> | null = null;
+
+export function createBrowserClient(): SupabaseClient<Database> {
+  if (browserClient) return browserClient;
+
   if (!supabaseUrl || !supabaseAnonKey) {
-    // Return placeholder on both server and client so the app never crashes (no white screen).
-    // AuthPanel shows "Sign-in is not configured" when supabase is the placeholder.
-    return createSupabaseClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
+    browserClient = createSupabaseClient<Database>('https://placeholder.supabase.co', 'placeholder-anon-key');
+  } else {
+    browserClient = createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
   }
-  return createSupabaseClient<Database>(supabaseUrl, supabaseAnonKey);
+  return browserClient;
 }
 
 /** Alias for createBrowserClient (used by auth and other pages). */
-export function createClient() {
+export function createClient(): SupabaseClient<Database> {
   return createBrowserClient();
 }

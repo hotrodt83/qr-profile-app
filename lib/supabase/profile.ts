@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import type { Database, ProfilesRow, ProfilesInsert } from "./database.types"
+import type { Database, ProfilesRow, ProfilesInsert, ProfileLinkRow, ProfileLinkInsert } from "./database.types"
 
 export type FlatProfile = ProfilesRow
 
@@ -276,4 +276,122 @@ export async function updateFaceDescriptor(
     .update({ face_descriptor: descriptor, updated_at: new Date().toISOString() })
     .eq("id", userId)
   return { error }
+}
+
+// =============================================================================
+// PROFILE LINKS (profile_links table)
+// =============================================================================
+
+export type ProfileLinkPayload = {
+  platform: string
+  value: string
+  is_public: boolean
+  sort_order?: number
+}
+
+/** Fetch all links for a user (owner view - includes private links) */
+export async function fetchProfileLinksByUserId(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<{ data: ProfileLinkRow[]; error: unknown }> {
+  const { data, error } = await supabase
+    .from("profile_links")
+    .select("*")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true })
+  if (error) return { data: [], error }
+  return { data: data ?? [], error: null }
+}
+
+/** Fetch public links for a user (public view - only is_public=true) */
+export async function fetchPublicProfileLinks(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<ProfileLinkRow[]> {
+  const { data, error } = await supabase
+    .from("profile_links")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_public", true)
+    .order("sort_order", { ascending: true })
+  if (error) {
+    console.error("[profile] fetchPublicProfileLinks error:", error)
+    return []
+  }
+  return data ?? []
+}
+
+/** Upsert multiple links for a user (by user_id + platform) */
+export async function upsertProfileLinks(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  links: ProfileLinkPayload[]
+): Promise<{ data: ProfileLinkRow[]; error: unknown }> {
+  if (links.length === 0) {
+    return { data: [], error: null }
+  }
+
+  const rows: ProfileLinkInsert[] = links.map((link, idx) => ({
+    user_id: userId,
+    platform: link.platform,
+    value: link.value,
+    is_public: link.is_public,
+    sort_order: link.sort_order ?? idx,
+    updated_at: new Date().toISOString(),
+  }))
+
+  const { data, error } = await supabase
+    .from("profile_links")
+    .upsert(rows, { onConflict: "user_id,platform" })
+    .select()
+
+  if (error) {
+    console.error("[profile] upsertProfileLinks error:", error)
+    return { data: [], error }
+  }
+  return { data: data ?? [], error: null }
+}
+
+/** Delete links for platforms not in the provided list */
+export async function deleteRemovedProfileLinks(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  keepPlatforms: string[]
+): Promise<{ error: unknown }> {
+  if (keepPlatforms.length === 0) {
+    const { error } = await supabase
+      .from("profile_links")
+      .delete()
+      .eq("user_id", userId)
+    return { error }
+  }
+
+  const { error } = await supabase
+    .from("profile_links")
+    .delete()
+    .eq("user_id", userId)
+    .not("platform", "in", `(${keepPlatforms.map(p => `"${p}"`).join(",")})`)
+  return { error }
+}
+
+/** Sync profile links: upsert provided links, delete any not in the list */
+export async function syncProfileLinks(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  links: ProfileLinkPayload[]
+): Promise<{ data: ProfileLinkRow[]; error: unknown }> {
+  const nonEmptyLinks = links.filter(l => l.value.trim() !== "")
+  
+  const upsertResult = await upsertProfileLinks(supabase, userId, nonEmptyLinks)
+  if (upsertResult.error) {
+    return upsertResult
+  }
+
+  const keepPlatforms = nonEmptyLinks.map(l => l.platform)
+  const deleteResult = await deleteRemovedProfileLinks(supabase, userId, keepPlatforms)
+  if (deleteResult.error) {
+    console.error("[profile] deleteRemovedProfileLinks error:", deleteResult.error)
+  }
+
+  return upsertResult
 }

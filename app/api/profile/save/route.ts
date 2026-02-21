@@ -3,7 +3,9 @@ import { createServerClient, createServerClientWithAuth } from "@/lib/supabase/s
 import {
   upsertProfile,
   validateProfilePayload,
+  syncProfileLinks,
   type ProfilePayload,
+  type ProfileLinkPayload,
 } from "@/lib/supabase/profile";
 
 /**
@@ -35,9 +37,13 @@ export async function POST(request: Request) {
 
   const userId = user.id;
   let payload: ProfilePayload;
+  let links: ProfileLinkPayload[] = [];
   try {
     const body = await request.json();
     payload = body as ProfilePayload;
+    if (Array.isArray(body.links)) {
+      links = body.links as ProfileLinkPayload[];
+    }
   } catch {
     return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
@@ -84,6 +90,14 @@ export async function POST(request: Request) {
       { error: "Profile save failed—check permissions." },
       { status: 500 }
     );
+  }
+
+  // Sync profile_links if provided
+  if (links.length > 0) {
+    const { error: linksError } = await syncProfileLinks(supabase, userId, links);
+    if (linksError) {
+      console.error("[api/profile/save] syncProfileLinks failed:", linksError);
+    }
   }
 
   return NextResponse.json({ profile: row });

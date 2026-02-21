@@ -93,6 +93,34 @@ export type ProfilesUpdate = {
   updated_at?: string
 }
 
+export type ProfileLinkRow = {
+  id: string
+  user_id: string
+  platform: string
+  value: string
+  is_public: boolean
+  sort_order: number
+  updated_at: string
+}
+
+export type ProfileLinkInsert = {
+  id?: string
+  user_id: string
+  platform: string
+  value: string
+  is_public?: boolean
+  sort_order?: number
+  updated_at?: string
+}
+
+export type ProfileLinkUpdate = {
+  platform?: string
+  value?: string
+  is_public?: boolean
+  sort_order?: number
+  updated_at?: string
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -100,6 +128,11 @@ export type Database = {
         Row: ProfilesRow
         Insert: ProfilesInsert
         Update: ProfilesUpdate
+      }
+      profile_links: {
+        Row: ProfileLinkRow
+        Insert: ProfileLinkInsert
+        Update: ProfileLinkUpdate
       }
     }
     Views: Record<string, never>

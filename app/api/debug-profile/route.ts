@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
@@ -7,24 +7,42 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = searchParams.get("username") || "HotRod";
 
-  if (!isSupabaseConfigured()) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anon) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
   }
 
-  const supabase = createServerClient();
+  const supabase = createClient(url, anon, {
+    auth: { persistSession: false },
+  });
 
   // Test 1: Direct query to profiles table
-  const { data: directData, error: directError } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from("profiles")
-    .select("id, username, whatsapp, whatsapp_public, email, email_public, website, website_public")
+    .select("*")
     .ilike("username", username)
-    .maybeSingle();
+    .single();
 
-  // Test 2: Call the RPC function
+  // Test 2: Check profile_links table for this user
+  let linksData = null;
+  let linksError = null;
+  if (profileData?.id) {
+    const result = await supabase
+      .from("profile_links")
+      .select("*")
+      .eq("user_id", profileData.id)
+      .order("sort_order");
+    linksData = result.data;
+    linksError = result.error;
+  }
+
+  // Test 3: Call the RPC function
   let rpcData = null;
   let rpcError = null;
   try {
-    const result = await (supabase as any).rpc("get_public_profile", {
+    const result = await supabase.rpc("get_public_profile", {
       p_username: username,
     });
     rpcData = result.data;
@@ -33,15 +51,33 @@ export async function GET(request: Request) {
     rpcError = { message: e.message };
   }
 
+  // Test 4: Check if profile_links table exists
+  let tableCheck = null;
+  try {
+    const { data, error } = await supabase
+      .from("profile_links")
+      .select("id")
+      .limit(1);
+    tableCheck = { exists: !error, error: error?.message };
+  } catch (e: any) {
+    tableCheck = { exists: false, error: e.message };
+  }
+
   return NextResponse.json({
     username,
-    directQuery: {
-      data: directData,
-      error: directError,
+    profile: {
+      data: profileData,
+      error: profileError,
+    },
+    profileLinks: {
+      data: linksData,
+      error: linksError,
+      tableCheck,
     },
     rpcFunction: {
       data: rpcData,
       error: rpcError,
+      hasLinksColumn: rpcData?.[0]?.links !== undefined,
     },
   });
 }

@@ -2,33 +2,16 @@
 
 import BuildStamp from "@/app/components/BuildStamp";
 
-export type PublicProfileData = {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  bio: string | null;
-  avatar_url?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  whatsapp?: string | null;
-  telegram?: string | null;
-  facebook?: string | null;
-  instagram?: string | null;
-  tiktok?: string | null;
-  x?: string | null;
-  linkedin?: string | null;
-  website?: string | null;
-} | null;
-
 type ContactItem = {
   label: string;
   href: string;
   value: string;
 };
 
-type Props = {
-  profile: PublicProfileData;
-  username: string;
+type ProfileLink = {
+  platform: string;
+  value: string;
+  sort_order: number;
 };
 
 function stripAt(s: string): string {
@@ -40,7 +23,57 @@ function ensureHttps(url: string): string {
   return `https://${url}`;
 }
 
-function buildContactItems(profile: NonNullable<PublicProfileData>): ContactItem[] {
+const PLATFORM_LABELS: Record<string, string> = {
+  email: "Email",
+  phone: "Phone",
+  whatsapp: "WhatsApp",
+  telegram: "Telegram",
+  facebook: "Facebook",
+  instagram: "Instagram",
+  tiktok: "TikTok",
+  x: "X",
+  linkedin: "LinkedIn",
+  website: "Website",
+};
+
+function buildHrefForPlatform(platform: string, value: string): string {
+  switch (platform) {
+    case "email":
+      return `mailto:${value}`;
+    case "phone":
+      return `tel:${value}`;
+    case "whatsapp":
+      return `https://wa.me/${value.replace(/[^0-9]/g, "")}`;
+    case "telegram":
+      return `https://t.me/${stripAt(value)}`;
+    case "facebook":
+      return `https://facebook.com/${stripAt(value)}`;
+    case "instagram":
+      return `https://instagram.com/${stripAt(value)}`;
+    case "tiktok":
+      return `https://tiktok.com/@${stripAt(value)}`;
+    case "x":
+      return `https://x.com/${stripAt(value)}`;
+    case "linkedin":
+      return `https://linkedin.com/in/${stripAt(value)}`;
+    case "website":
+      return ensureHttps(value);
+    default:
+      return ensureHttps(value);
+  }
+}
+
+function buildContactItemsFromLinks(links: ProfileLink[]): ContactItem[] {
+  return links
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map(link => ({
+      label: PLATFORM_LABELS[link.platform] ?? link.platform,
+      href: buildHrefForPlatform(link.platform, link.value),
+      value: link.value,
+    }));
+}
+
+function buildContactItemsFromProfile(profile: any): ContactItem[] {
   const items: ContactItem[] = [];
 
   if (profile.email) {
@@ -109,7 +142,7 @@ function buildContactItems(profile: NonNullable<PublicProfileData>): ContactItem
   return items;
 }
 
-export default function PublicProfileClient({ profile, username }: Props) {
+export default function PublicProfileClient({ profile }: { profile: any }) {
   if (!profile) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -118,8 +151,11 @@ export default function PublicProfileClient({ profile, username }: Props) {
     );
   }
 
-  const displayName = profile.display_name || profile.username || username;
-  const items = buildContactItems(profile);
+  const links = profile.links || [];
+  const displayName = profile.display_name || profile.username || "";
+  const items = links.length > 0 
+    ? buildContactItemsFromLinks(links) 
+    : buildContactItemsFromProfile(profile);
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -146,7 +182,7 @@ export default function PublicProfileClient({ profile, username }: Props) {
           <p className="text-white/80 text-center mt-4">{profile.bio}</p>
         )}
 
-        {items.length > 0 && (
+        {items.length > 0 ? (
           <div className="mt-8 space-y-3">
             {items.map((item) => (
               <a
@@ -160,6 +196,16 @@ export default function PublicProfileClient({ profile, username }: Props) {
                 <span className="float-right text-white/70">{item.value}</span>
               </a>
             ))}
+          </div>
+        ) : (
+          <div className="mt-8 text-center">
+            <p className="text-white/50 text-sm">
+              No public links yet.{" "}
+              <a href="/edit" className="text-blue-400 hover:text-blue-300 underline">
+                Visit /edit
+              </a>{" "}
+              to add links and toggle them public.
+            </p>
           </div>
         )}
       </div>

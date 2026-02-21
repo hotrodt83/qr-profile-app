@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { fetchProfileByUserId, upsertProfile, updateAvatarUrl, validateProfilePayload, ensureProfileExists, type ProfilePayload } from "@/lib/supabase/profile";
@@ -9,6 +8,8 @@ import type { Database, ProfilesRow } from "@/lib/supabase/database.types";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
 import { parsePhone, formatFullPhone } from "@/lib/countryCodes";
 import SearchableCountrySelect from "@/app/components/SearchableCountrySelect";
+import ShareModal from "@/app/components/ShareModal";
+import { buildProfileUrl } from "@/lib/siteUrl";
 
 function getEmptyForm(): Record<string, string> {
   const empty: Record<string, string> = { username: "", display_name: "", bio: "" };
@@ -105,7 +106,6 @@ type Props = {
 };
 
 export default function EditLinksForm({ userId, supabase, onBack, isGuest, onRequestAuth, persistDraft }: Props) {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -118,6 +118,8 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [savedUsername, setSavedUsername] = useState<string>("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef(form);
   formRef.current = form;
@@ -407,6 +409,17 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       (payload as Record<string, unknown>)[`${key}_public`] = !!privacy[`${key}_public`];
     });
 
+    // Build links array for profile_links table
+    const links = EDIT_FIELDS.map(({ key }, idx) => {
+      const v = form[key]?.trim() ?? "";
+      return {
+        platform: key,
+        value: v,
+        is_public: !!privacy[`${key}_public`],
+        sort_order: idx,
+      };
+    }).filter(link => link.value !== "");
+
     const validation = validateProfilePayload(payload);
     if (!validation.valid) {
       setSaving(false);
@@ -434,7 +447,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, links }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -458,9 +471,10 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
 
       clearCreateDraft();
       clearProfileDraft();
-      setToast("Saved ✅");
+      setToast("Saved");
       setToastSuccess(true);
-      router.push(`/u/${usernameTrimmed}`);
+      setSavedUsername(usernameTrimmed);
+      setShareModalOpen(true);
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const draft = loadProfileDraft();
@@ -852,6 +866,12 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           </button>
         </div>
       )}
+
+      <ShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        profileUrl={buildProfileUrl(savedUsername)}
+      />
     </div>
   );
 }
