@@ -8,8 +8,6 @@ import type { Database, ProfilesRow } from "@/lib/supabase/database.types";
 import { EDIT_FIELDS } from "@/lib/editor-fields";
 import { parsePhone, formatFullPhone } from "@/lib/countryCodes";
 import SearchableCountrySelect from "@/app/components/SearchableCountrySelect";
-import ShareModal from "@/app/components/ShareModal";
-import { buildProfileUrl } from "@/lib/siteUrl";
 
 function getEmptyForm(): Record<string, string> {
   const empty: Record<string, string> = { username: "", display_name: "", bio: "" };
@@ -118,8 +116,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [shareModalOpen, setShareModalOpen] = useState(false);
-  const [savedUsername, setSavedUsername] = useState<string>("");
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef(form);
   formRef.current = form;
@@ -471,10 +467,13 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
 
       clearCreateDraft();
       clearProfileDraft();
-      setToast("Saved");
+      setToast("Saved! Redirecting...");
       setToastSuccess(true);
-      setSavedUsername(usernameTrimmed);
-      setShareModalOpen(true);
+      
+      // Redirect to public profile page after short delay
+      setTimeout(() => {
+        window.location.href = `/u/${encodeURIComponent(usernameTrimmed)}`;
+      }, 500);
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const draft = loadProfileDraft();
@@ -866,12 +865,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           </button>
         </div>
       )}
-
-      <ShareModal
-        open={shareModalOpen}
-        onClose={() => setShareModalOpen(false)}
-        profileUrl={buildProfileUrl(savedUsername)}
-      />
     </div>
   );
 }
