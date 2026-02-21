@@ -115,6 +115,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadRetryKey, setLoadRetryKey] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -478,10 +479,9 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
   }
 
   const AVATAR_MAX_PX = 400;
-  const AVATAR_JPEG_QUALITY = 0.9;
-  const MAX_DATA_URL_BYTES = 220 * 1024; // cap stored size (avatar-only update keeps payload safe)
+  const AVATAR_JPEG_QUALITY = 0.85;
 
-  function resizeImageToDataUrl(file: File): Promise<string> {
+  function resizeImageToBlob(file: File): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -509,13 +509,17 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           return;
         }
         ctx.drawImage(img, 0, 0, tw, th);
-        let quality = AVATAR_JPEG_QUALITY;
-        let dataUrl = canvas.toDataURL("image/jpeg", quality);
-        while (dataUrl.length > MAX_DATA_URL_BYTES && quality > 0.2) {
-          quality -= 0.1;
-          dataUrl = canvas.toDataURL("image/jpeg", quality);
-        }
-        resolve(dataUrl);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Failed to create image blob"));
+            }
+          },
+          "image/jpeg",
+          AVATAR_JPEG_QUALITY
+        );
       };
       img.onerror = () => {
         URL.revokeObjectURL(url);
@@ -564,15 +568,23 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       return;
     }
     e.target.value = "";
-    setAvatarUploading(true);
-    setToast(null);
     setAvatarError(null);
+    setToast(null);
+
+    // Immediately show preview while processing
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+    setAvatarUploading(true);
+
     try {
+      // Resize client-side first (faster upload, smaller payload)
+      const resizedBlob = await resizeImageToBlob(file);
+      
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (token) {
         const formData = new FormData();
-        formData.append("avatar", file);
+        formData.append("avatar", resizedBlob, "avatar.jpg");
         const res = await fetch("/api/upload-avatar", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -580,21 +592,43 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
         });
         const json = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
         if (res.ok && typeof json?.url === "string" && json.url) {
+          // Success - clear preview and set final URL
+          URL.revokeObjectURL(previewUrl);
+          setAvatarPreview(null);
           await savePhotoOnly(json.url);
           return;
         }
         if (!res.ok && json?.error) {
+          URL.revokeObjectURL(previewUrl);
+          setAvatarPreview(null);
           setAvatarError(json.error);
           return;
         }
       }
-      const dataUrl = await resizeImageToDataUrl(file);
-      if (!dataUrl || !dataUrl.startsWith("data:image/")) {
-        setAvatarError("Invalid image. Try another file.");
-        return;
-      }
-      await savePhotoOnly(dataUrl);
+      // Fallback: save resized blob as data URL if no token
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        URL.revokeObjectURL(previewUrl);
+        setAvatarPreview(null);
+        if (dataUrl && dataUrl.startsWith("data:image/")) {
+          await savePhotoOnly(dataUrl);
+        } else {
+          setAvatarError("Invalid image. Try another file.");
+        }
+        setAvatarUploading(false);
+      };
+      reader.onerror = () => {
+        URL.revokeObjectURL(previewUrl);
+        setAvatarPreview(null);
+        setAvatarError("Failed to read image.");
+        setAvatarUploading(false);
+      };
+      reader.readAsDataURL(resizedBlob);
+      return;
     } catch (err) {
+      URL.revokeObjectURL(previewUrl);
+      setAvatarPreview(null);
       const msg = err instanceof Error ? err.message : String(err ?? "Failed to save photo");
       setAvatarError(msg);
     } finally {
@@ -654,12 +688,17 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
                   className="edit-avatar-btn"
                   aria-label="Change profile photo"
                 >
-                  {avatarUploading ? (
-                    <span className="edit-avatar-placeholder">…</span>
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="" className="edit-avatar-img edit-avatar-img--uploading" />
                   ) : avatarUrl ? (
                     <img src={avatarUrl} alt="" className="edit-avatar-img" />
+                  ) : avatarUploading ? (
+                    <span className="edit-avatar-placeholder">…</span>
                   ) : (
                     <span className="edit-avatar-placeholder">+ Photo</span>
+                  )}
+                  {avatarUploading && (
+                    <span className="edit-avatar-spinner" aria-label="Uploading" />
                   )}
                 </button>
               </>
