@@ -31,7 +31,7 @@ Use this after deploying profile-save fixes to confirm persistence and avatar be
 - **Endpoint:** `POST /api/profile/save` (same origin as your app, e.g. `https://your-app.vercel.app/api/profile/save`).
 - **Headers:** `Content-Type: application/json`, `Authorization: Bearer <access_token>`.
 - **Body:** JSON object with `username`, `display_name`, `bio`, `avatar_url`, link fields, `*_public` booleans, etc. (same shape as `ProfilePayload`).
-- **Success:** Status **200**, body `{ profile: { id, username, ... } }`. Only then does the UI show "Saved ✅" and redirect to `/share`.
+- **Success:** Status **200**, body `{ profile: { id, username, ... } }`. Only then does the UI show "Saved ✅" and redirect to the user's public profile (`/u/[username]`).
 - **Failure:** Status **401** (not logged in), **400** (validation), **403** (RLS), **409** (username taken), **500** (server/DB error). Body `{ error: "..." }`. UI shows that message and does **not** show "Saved".
 
 ### 3. Reproduce and confirm (desktop)

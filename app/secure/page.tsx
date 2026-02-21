@@ -5,7 +5,7 @@ import { createBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
-const SAFE_NEXT = ["/", "/create", "/edit", "/share", "/dashboard"];
+const SAFE_NEXT = ["/", "/create", "/edit", "/dashboard"];
 const RESEND_COOLDOWN_SEC = 60;
 
 function getNext(sp: { get(key: string): string | null }): string {

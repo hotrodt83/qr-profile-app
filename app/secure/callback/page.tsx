@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams, useRouter } from "next/navigation";
 
-const SAFE_NEXT = ["/", "/create", "/edit", "/share", "/dashboard"];
+const SAFE_NEXT = ["/", "/create", "/edit", "/dashboard"];
 const STEPUP_COOKIE = "smartqr_stepup";
 const STEPUP_TTL_MS = 10 * 60 * 1000;
 

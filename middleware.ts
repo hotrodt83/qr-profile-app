@@ -96,7 +96,6 @@ export function middleware(request: NextRequest) {
   if (
     path === "/" ||
     path === "/create" ||
-    path === "/share" ||
     path.startsWith("/auth/") ||
     path.startsWith("/verify") ||
     path.startsWith("/secure")
@@ -122,7 +121,6 @@ export const config = {
     "/create",
     "/edit/:path*",
     "/dashboard/:path*",
-    "/share",
     "/verify/:path*",
     "/auth/:path*",
     "/secure/:path*",

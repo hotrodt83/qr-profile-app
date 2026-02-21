@@ -461,7 +461,7 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
       clearProfileDraft();
       setToast("Saved ✅");
       setToastSuccess(true);
-      router.push("/share");
+      router.push(`/u/${usernameTrimmed}`);
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const draft = loadProfileDraft();

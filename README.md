@@ -37,13 +37,12 @@ Your identity in one scan. One QR code for your contact and social links. You ch
 
 - **New user**: Landing → **Create SmartQR** → Edit → Save → confirmation → auto-redirect to **Share**.
 - **Returning user**: Landing → **My SmartQR / Edit** → email verification → Edit → Save → auto-redirect to Share.
-- After successful save we always redirect to Share. Verification is email-only; resend is rate-limited.
+- After successful save we redirect to the user's public profile. Verification is email-only; resend is rate-limited.
 
 ## Flow
 
 - **Home** (`/`): Landing with "Create SmartQR" and "My SmartQR / Edit".
 - **Edit** (`/edit`): Edit profile; guests must sign in (email OTP) to save.
-- **Share** (`/share`): After save — Email, QR code, Copy URL.
 - **Public profile** (`/u/[username]`): What scanners see.
 
 Each user has one profile. Updating the profile updates `/u/[username]`.

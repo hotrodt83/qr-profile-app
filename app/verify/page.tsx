@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession } from "@/lib/useSession";
 
-const SAFE_NEXT = ["/", "/create", "/edit", "/share"];
+const SAFE_NEXT = ["/", "/create", "/edit"];
 function getNext(sp: { get(key: string): string | null }): string {
   const n = sp.get("next") || "/create";
   const path = n.split("?")[0];
