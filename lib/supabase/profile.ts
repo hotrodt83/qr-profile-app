@@ -250,7 +250,8 @@ export async function fetchPublicProfileByUsername(
   supabase: SupabaseClient<Database>,
   username: string
 ): Promise<PublicProfile | null> {
-  const { data, error } = await supabase.rpc("get_public_profile", {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("get_public_profile", {
     p_username: username,
   });
   if (error) {
