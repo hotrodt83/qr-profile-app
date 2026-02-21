@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import PublicProfileClient from "./PublicProfileClient";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 type PageProps = {
   params: { username: string };
@@ -20,6 +22,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   const supabase = createClient(url, anon, {
     auth: { persistSession: false },
+    global: {
+      fetch: (url, options) => fetch(url, { ...options, cache: "no-store" }),
+    },
   });
 
   const { data, error } = await supabase.rpc("get_public_profile", {
