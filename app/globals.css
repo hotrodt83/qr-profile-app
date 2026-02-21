@@ -699,13 +699,13 @@ body {
 }
 
 .qrInner {
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
+  width: 180px;
+  height: 180px;
+  border-radius: 12px;
   background: #fff;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Scan-optimized: circular QR with animated flashing gradient ring */
@@ -716,7 +716,7 @@ body {
 }
 
 .qrFace--scannable {
-  border-radius: 50%;
+  border-radius: 16px;
   overflow: visible;
   padding: 10px;
   background: transparent;
@@ -731,7 +731,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: 16px;
   background: conic-gradient(
     from 0deg,
     #00ffcc,
@@ -750,16 +750,16 @@ body {
 }
 
 .qrInner--scannable {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  padding: 14px;
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  padding: 12px;
   background: #ffffff;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
