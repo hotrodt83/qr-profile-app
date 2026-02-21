@@ -49,10 +49,8 @@ If **Confirm email** is ON, users must click the link in the confirmation email 
 
 1. **Authentication → URL Configuration**.
 2. **Site URL**: your app URL (e.g. `http://localhost:3001` for dev or `https://yourdomain.com` for prod).
-3. **Redirect URLs**: add your auth page and edit page, e.g.  
-   `http://localhost:3001/auth/email`  
+3. **Redirect URLs**: add your app URLs, e.g.  
    `http://localhost:3001/edit`  
-   `https://yourdomain.com/auth/email`  
    `https://yourdomain.com/edit`  
    so confirmation and magic links land on your app.
 
@@ -94,7 +92,7 @@ In the browser console or network tab, requests should go to **your** `https://x
 - [ ] `.env.local` has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the correct project.
 - [ ] **Authentication → Providers → Email** is **Enabled**.
 - [ ] Either **Confirm email** is OFF (for testing) or users confirm email before signing in.
-- [ ] **Authentication → URL Configuration**: **Site URL** and **Redirect URLs** include `.../auth/email` and `.../edit`.
+- [ ] **Authentication → URL Configuration**: **Site URL** and **Redirect URLs** include `.../edit`.
 - [ ] (Optional) **Email Templates → Magic Link**: add `{{ .Token }}` to the body if you want the 6-digit code in the email.
 - [ ] (Optional) **Authentication → Settings**: set OTP/magic link expiry to 5–10 minutes for security.
 - [ ] Dev server restarted after changing env vars.

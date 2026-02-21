@@ -19,7 +19,7 @@ export default function VerifyPage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    router.replace(user ? next : `/auth/email?next=${encodeURIComponent(next)}`);
+    router.replace(user ? next : "/");
   }, [sessionLoading, user, next, router]);
 
   return (

@@ -24,7 +24,7 @@ export default function SecurePage() {
       if (data.user) {
         router.replace(next);
       } else {
-        router.replace("/auth/email?next=" + encodeURIComponent(next));
+        router.replace("/");
       }
     });
   }, [supabase, next, router]);

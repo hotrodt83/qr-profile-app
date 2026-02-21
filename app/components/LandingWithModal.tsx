@@ -21,8 +21,6 @@ function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props
   const router = useRouter();
   const navInFlightRef = useRef(false);
 
-  const authEmailNext = "/auth/email?next=" + encodeURIComponent("/create");
-
   const handleQrClick = useCallback(() => {
     if (!isAuthed) return;
     if (navInFlightRef.current) return;
@@ -38,7 +36,7 @@ function LandingWithModalInner({ qrValue: qrValueProp, isAuthed = false }: Props
 
   const titleTheme: LandingTitleTheme = "qr";
 
-  const createHref = isAuthed ? "/edit" : authEmailNext;
+  const createHref = isAuthed ? "/edit" : "/create";
 
   return (
     <main className="landingContainer" role="main">

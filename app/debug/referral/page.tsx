@@ -29,7 +29,7 @@ export default function DebugReferralPage() {
   useEffect(() => {
     if (sessionLoading) return;
     if (!user) {
-      router.replace("/auth/email?next=/debug/referral");
+      router.replace("/");
       return;
     }
 

@@ -57,7 +57,7 @@ export default function AuthPanel({ onAuthed, onBack, supabase: supabaseProp, ne
       </p>
       <button
         type="button"
-        onClick={() => router.push(`/auth/email?next=${encodeURIComponent(nextUrl)}`)}
+        onClick={() => router.push("/")}
         className="authBtnPrimary"
         style={{ width: "100%", marginBottom: 12 }}
       >

@@ -55,7 +55,6 @@ function isPublicRoute(pathname: string): boolean {
   if (pathname === "/create") return true;
   if (pathname.startsWith("/u/")) return true;
   if (pathname.startsWith("/p/")) return true;
-  if (pathname.startsWith("/auth/")) return true;
   if (pathname.startsWith("/verify")) return true;
   if (pathname.startsWith("/secure")) return true;
   if (pathname.startsWith("/api/")) return true;
@@ -84,8 +83,7 @@ export function middleware(request: NextRequest) {
   if (isProtectedRoute(pathname)) {
     if (!hasSupabaseSession(request)) {
       const url = request.nextUrl.clone();
-      url.pathname = "/auth/email";
-      url.searchParams.set("next", pathname);
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
     return NextResponse.next();
@@ -100,7 +98,6 @@ export const config = {
     "/create",
     "/edit/:path*",
     "/dashboard/:path*",
-    "/auth/:path*",
     "/verify/:path*",
     "/secure/:path*",
     "/u/:path*",

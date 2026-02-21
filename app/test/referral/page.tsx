@@ -8,7 +8,6 @@ export default function TestReferralPage() {
   const [username, setUsername] = useState("demo");
 
   const publicProfileUrl = `/u/${encodeURIComponent(username)}`;
-  const authWithRefUrl = `/auth/email?ref=${encodeURIComponent(username)}`;
   const debugPageUrl = "/debug/referral";
 
   return (
@@ -72,21 +71,7 @@ export default function TestReferralPage() {
 
             <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800">
               <p className="text-sm text-neutral-400 mb-2">
-                B) Open auth with referral param directly
-              </p>
-              <Link
-                href={authWithRefUrl}
-                target="_blank"
-                className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium"
-              >
-                Open auth with ?ref={username} →
-              </Link>
-              <p className="text-xs text-neutral-500 mt-2 font-mono">{authWithRefUrl}</p>
-            </div>
-
-            <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800">
-              <p className="text-sm text-neutral-400 mb-2">
-                C) Check recorded referral (requires auth)
+                B) Check recorded referral (requires auth)
               </p>
               <Link
                 href={debugPageUrl}
@@ -103,11 +88,10 @@ export default function TestReferralPage() {
           <div className="bg-neutral-900 rounded-xl p-4 border border-neutral-800 text-sm text-neutral-300 space-y-2">
             <p>1. Visit <code className="bg-neutral-800 px-1 rounded">/u/{username}</code></p>
             <p>2. Click &quot;Create your own QR profile&quot;</p>
-            <p>3. Redirected to <code className="bg-neutral-800 px-1 rounded">/auth/email?ref={username}</code></p>
-            <p>4. Auth page stores <code className="bg-neutral-800 px-1 rounded">smartqr_ref={username}</code> in localStorage</p>
-            <p>5. After login, <code className="bg-neutral-800 px-1 rounded">/create</code> or <code className="bg-neutral-800 px-1 rounded">/edit</code> runs <code className="bg-neutral-800 px-1 rounded">useRecordReferral</code></p>
-            <p>6. Referral row inserted into <code className="bg-neutral-800 px-1 rounded">public.referrals</code></p>
-            <p>7. localStorage key cleared on success</p>
+            <p>3. Referral info stored in localStorage</p>
+            <p>4. After login, <code className="bg-neutral-800 px-1 rounded">/create</code> or <code className="bg-neutral-800 px-1 rounded">/edit</code> runs <code className="bg-neutral-800 px-1 rounded">useRecordReferral</code></p>
+            <p>5. Referral row inserted into <code className="bg-neutral-800 px-1 rounded">public.referrals</code></p>
+            <p>6. localStorage key cleared on success</p>
           </div>
         </section>
 
