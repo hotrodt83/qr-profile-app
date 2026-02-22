@@ -845,6 +845,34 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           })}
         </div>
 
+        {/* Security & Privacy Info */}
+        <div className="edit-security-banner">
+          <div className="edit-security-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div className="edit-security-text">
+            <span className="edit-security-title">Your data is protected</span>
+            <span className="edit-security-desc">
+              Only fields marked "Show on profile" are public. 
+              <a href="/privacy" className="edit-security-link">Privacy Policy</a>
+              {" · "}
+              <a href="/terms" className="edit-security-link">Terms</a>
+            </span>
+          </div>
+        </div>
+
         <div className="edit-actions">
           <button type="submit" disabled={saving || !canSave} className="edit-save">
             {saving ? "Saving…" : isGuest ? "Sign in to save" : "Save"}
