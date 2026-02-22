@@ -1,7 +1,66 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import BuildStamp from "@/app/components/BuildStamp";
+
+function generateVCard(profile: any, items: ContactItem[]): string {
+  const lines: string[] = [
+    "BEGIN:VCARD",
+    "VERSION:3.0",
+  ];
+  
+  const displayName = profile.display_name || profile.username || "";
+  if (displayName) {
+    lines.push(`FN:${displayName}`);
+    lines.push(`N:${displayName};;;`);
+  }
+  
+  if (profile.bio) {
+    lines.push(`NOTE:${profile.bio.replace(/\n/g, "\\n")}`);
+  }
+  
+  if (profile.avatar_url) {
+    lines.push(`PHOTO;VALUE=URI:${profile.avatar_url}`);
+  }
+  
+  items.forEach(item => {
+    switch (item.label) {
+      case "Email":
+        lines.push(`EMAIL;TYPE=INTERNET:${item.value}`);
+        break;
+      case "Phone":
+        lines.push(`TEL;TYPE=CELL:${item.value}`);
+        break;
+      case "WhatsApp":
+        lines.push(`TEL;TYPE=CELL,WHATSAPP:${item.value}`);
+        break;
+      case "Website":
+        lines.push(`URL:${item.href}`);
+        break;
+      case "LinkedIn":
+        lines.push(`URL;TYPE=LINKEDIN:${item.href}`);
+        break;
+      case "Instagram":
+        lines.push(`X-SOCIALPROFILE;TYPE=instagram:${item.href}`);
+        break;
+      case "X":
+        lines.push(`X-SOCIALPROFILE;TYPE=twitter:${item.href}`);
+        break;
+      case "Facebook":
+        lines.push(`X-SOCIALPROFILE;TYPE=facebook:${item.href}`);
+        break;
+      case "TikTok":
+        lines.push(`X-SOCIALPROFILE;TYPE=tiktok:${item.href}`);
+        break;
+      case "Telegram":
+        lines.push(`X-SOCIALPROFILE;TYPE=telegram:${item.href}`);
+        break;
+    }
+  });
+  
+  lines.push("END:VCARD");
+  return lines.join("\r\n");
+}
 
 type ContactItem = {
   label: string;
@@ -146,6 +205,7 @@ function buildContactItemsFromProfile(profile: any): ContactItem[] {
 export default function PublicProfileClient({ profile }: { profile: any }) {
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [savedContact, setSavedContact] = useState(false);
 
   if (!profile) {
     return (
@@ -162,6 +222,7 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
     : buildContactItemsFromProfile(profile);
 
   const profileUrl = typeof window !== "undefined" ? window.location.href : "";
+  const isVerified = profile.email_verified === true;
 
   async function handleCopyLink() {
     try {
@@ -187,6 +248,57 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
     const subject = encodeURIComponent(`Check out ${displayName}'s profile`);
     const body = encodeURIComponent(`Hey!\n\nCheck out this profile:\n${profileUrl}\n`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    setShowShareMenu(false);
+  }
+
+  function handleDownloadVCard() {
+    const vCardData = generateVCard(profile, items);
+    const blob = new Blob([vCardData], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${profile.username || "contact"}.vcf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setSavedContact(true);
+    setTimeout(() => setSavedContact(false), 2000);
+  }
+
+  function handleDownloadQR() {
+    const size = 512;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, size, size);
+
+    import("qrcode").then((QRCode) => {
+      QRCode.toCanvas(canvas, profileUrl, {
+        width: size,
+        margin: 2,
+        color: { dark: "#000000", light: "#ffffff" },
+        errorCorrectionLevel: "H",
+      }, (err) => {
+        if (err) {
+          console.error("QR generation failed:", err);
+          return;
+        }
+        const dataUrl = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = `${profile.username || "qrcode"}-qr.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }).catch(() => {
+      alert("QR code generation not available");
+    });
     setShowShareMenu(false);
   }
 
@@ -225,7 +337,28 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-center">{displayName}</h1>
+        <h1 className="text-2xl font-bold text-center flex items-center justify-center gap-2">
+          {displayName}
+          {isVerified && (
+            <span className="inline-flex items-center" title="Verified">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-cyan-400"
+              >
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" fill="rgba(0,255,255,0.2)" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </span>
+          )}
+        </h1>
 
         {profile.username && (
           <p className="text-cyan-400/80 text-center mt-1">@{profile.username}</p>
@@ -262,8 +395,34 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
           </div>
         )}
 
+        {/* Save Contact Button */}
+        <div className="mt-8">
+          <button
+            onClick={handleDownloadVCard}
+            className="w-full py-3 px-4 rounded-xl bg-green-500/20 border border-green-500/40 hover:bg-green-500/30 hover:border-green-500/60 transition flex items-center justify-center gap-2 text-green-400 font-medium"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" y1="8" x2="19" y2="14" />
+              <line x1="22" y1="11" x2="16" y2="11" />
+            </svg>
+            {savedContact ? "Saved!" : "Save Contact"}
+          </button>
+        </div>
+
         {/* Share Button */}
-        <div className="mt-10 relative">
+        <div className="mt-3 relative">
           <button
             onClick={() => setShowShareMenu(!showShareMenu)}
             className="w-full py-3 px-4 rounded-xl bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 hover:border-cyan-500/60 transition flex items-center justify-center gap-2 text-cyan-400 font-medium"
@@ -331,6 +490,32 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
                   <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                 </svg>
                 <span>Share via Email</span>
+              </button>
+              <button
+                onClick={handleDownloadQR}
+                className="w-full px-4 py-3 text-left hover:bg-neutral-800 transition flex items-center gap-3 border-t border-white/10"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-cyan-400"
+                >
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                  <rect x="14" y="14" width="3" height="3" />
+                  <rect x="18" y="14" width="3" height="3" />
+                  <rect x="14" y="18" width="3" height="3" />
+                  <rect x="18" y="18" width="3" height="3" />
+                </svg>
+                <span>Download QR Code</span>
               </button>
             </div>
           )}

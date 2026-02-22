@@ -891,6 +891,8 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
               <a href="/privacy" className="edit-security-link">Privacy Policy</a>
               {" · "}
               <a href="/terms" className="edit-security-link">Terms</a>
+              {" · "}
+              <a href="/settings" className="edit-security-link">Settings</a>
             </span>
           </div>
         </div>
