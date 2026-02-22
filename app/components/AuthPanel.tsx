@@ -58,7 +58,16 @@ export default function AuthPanel({ onAuthed, onBack, supabase: supabaseProp, ne
       });
 
       if (otpError) {
-        setError(otpError.message);
+        console.error("[Auth] OTP Error:", otpError);
+        if (otpError.message.includes("disabled") || otpError.message.includes("Email logins")) {
+          setError("Email signup is temporarily unavailable. Please try again in a moment.");
+        } else if (otpError.message.includes("rate") || otpError.message.includes("limit")) {
+          setError("Too many attempts. Please wait a minute and try again.");
+        } else if (otpError.message.includes("invalid")) {
+          setError("Please enter a valid email address.");
+        } else {
+          setError(otpError.message);
+        }
       } else {
         setStep("otp");
         setMessage("Check your email! We sent you a 6-digit code.");
