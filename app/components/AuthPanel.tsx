@@ -39,41 +39,55 @@ export default function AuthPanel({ onAuthed, onBack, supabase: supabaseProp, ne
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase || !email.trim()) return;
+    if (!email.trim()) return;
     
     setLoading(true);
     setError(null);
     setMessage(null);
 
     try {
-      const redirectUrl = typeof window !== "undefined" 
-        ? `${window.location.origin}/secure/callback?next=${encodeURIComponent(nextUrl)}`
-        : nextUrl;
+      // Use direct API call for more reliable OTP sending
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        setError("Configuration error. Please contact support.");
+        setLoading(false);
+        return;
+      }
 
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: redirectUrl,
+      const response = await fetch(`${supabaseUrl}/auth/v1/otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': supabaseKey,
         },
+        body: JSON.stringify({
+          email: email.trim(),
+          create_user: true,
+        }),
       });
 
-      if (otpError) {
-        console.error("[Auth] OTP Error:", otpError);
-        if (otpError.message.includes("disabled") || otpError.message.includes("Email logins")) {
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        console.error("[Auth] OTP Error:", data);
+        if (data.msg?.includes("disabled") || data.msg?.includes("Email logins")) {
           setError("Email signup is temporarily unavailable. Please try again in a moment.");
-        } else if (otpError.message.includes("rate") || otpError.message.includes("limit")) {
+        } else if (data.msg?.includes("rate") || data.msg?.includes("limit")) {
           setError("Too many attempts. Please wait a minute and try again.");
-        } else if (otpError.message.includes("invalid")) {
+        } else if (data.msg?.includes("invalid")) {
           setError("Please enter a valid email address.");
         } else {
-          setError(otpError.message);
+          setError(data.msg || data.error_description || "Failed to send code. Please try again.");
         }
       } else {
         setStep("otp");
         setMessage("Check your email! We sent you a 6-digit code.");
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      console.error("[Auth] Network error:", err);
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
