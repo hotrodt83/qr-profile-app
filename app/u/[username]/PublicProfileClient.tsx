@@ -206,6 +206,7 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [savedContact, setSavedContact] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   if (!profile) {
     return (
@@ -508,6 +509,191 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
             </div>
           )}
         </div>
+
+        {/* Help Button */}
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="inline-flex items-center gap-2 text-white/50 hover:text-white/80 transition text-sm"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            What do these buttons do?
+          </button>
+        </div>
+
+        {/* Help Modal */}
+        {showHelp && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setShowHelp(false)}
+          >
+            <div 
+              className="bg-neutral-900 border border-white/10 rounded-2xl max-w-md w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-5 border-b border-white/10 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">How to Use</h2>
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="text-white/60 hover:text-white transition"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="p-5 space-y-5">
+                {/* Save Contact */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-500/20 border border-green-500/40 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-400"
+                    >
+                      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <line x1="19" y1="8" x2="19" y2="14" />
+                      <line x1="22" y1="11" x2="16" y2="11" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-green-400">Save Contact</h3>
+                    <p className="text-sm text-white/70 mt-1">
+                      Downloads a contact file (.vcf) with all the profile info. Open it to save directly to your phone contacts — no typing needed!
+                    </p>
+                  </div>
+                </div>
+
+                {/* Share Profile */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-cyan-400"
+                    >
+                      <circle cx="18" cy="5" r="3" />
+                      <circle cx="6" cy="12" r="3" />
+                      <circle cx="18" cy="19" r="3" />
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-cyan-400">Share Profile</h3>
+                    <p className="text-sm text-white/70 mt-1">
+                      Opens sharing options to send this profile to others.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sub-options */}
+                <div className="pl-14 space-y-4 border-l border-white/10 ml-5">
+                  {/* Copy Link */}
+                  <div>
+                    <h4 className="font-medium text-white/90 text-sm">Copy Link</h4>
+                    <p className="text-xs text-white/60 mt-1">
+                      Copies the profile URL to your clipboard. Paste it anywhere — text messages, social media, emails.
+                    </p>
+                  </div>
+                  
+                  {/* Share via Email */}
+                  <div>
+                    <h4 className="font-medium text-white/90 text-sm">Share via Email</h4>
+                    <p className="text-xs text-white/60 mt-1">
+                      Opens your email app with a pre-written message containing the profile link. Just add recipients and send!
+                    </p>
+                  </div>
+                  
+                  {/* Download QR Code */}
+                  <div>
+                    <h4 className="font-medium text-white/90 text-sm">Download QR Code</h4>
+                    <p className="text-xs text-white/60 mt-1">
+                      Downloads a scannable QR code image (PNG). Perfect for printing on business cards, flyers, or displaying at events.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Verified Badge */}
+                <div className="flex gap-4 pt-2 border-t border-white/10">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-cyan-400"
+                    >
+                      <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" fill="rgba(0,255,255,0.2)" />
+                      <path d="m9 12 2 2 4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-cyan-400">Verified Badge</h3>
+                    <p className="text-sm text-white/70 mt-1">
+                      The checkmark next to a name means the profile owner has verified their email address. This helps confirm the profile is authentic.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-5 border-t border-white/10">
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="w-full py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 hover:bg-cyan-500/30 transition text-cyan-400 font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
       <BuildStamp />
     </div>
