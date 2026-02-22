@@ -674,6 +674,28 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
 
   return (
     <div className="edit-inner">
+      {onBack && (
+        <a
+          href="/"
+          onClick={(e) => { e.preventDefault(); onBack(); }}
+          className="edit-back-top"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            viewBox="0 0 24 24"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back
+        </a>
+      )}
       <header className="edit-header">
         {!isGuest && userId && (
           <div className="edit-avatar-wrap">
@@ -885,14 +907,6 @@ export default function EditLinksForm({ userId, supabase, onBack, isGuest, onReq
           )}
         </div>
       </form>
-
-      {onBack && (
-        <div className="edit-actions edit-actions--back">
-          <button type="button" onClick={onBack} className="edit-back">
-            ← Back
-          </button>
-        </div>
-      )}
     </div>
   );
 }
