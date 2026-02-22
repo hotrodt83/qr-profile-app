@@ -267,34 +267,22 @@ export default function PublicProfileClient({ profile }: { profile: any }) {
   }
 
   function handleDownloadQR() {
-    const size = 512;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, size, size);
-
     import("qrcode").then((QRCode) => {
-      QRCode.toCanvas(canvas, profileUrl, {
-        width: size,
+      const options = {
+        width: 512,
         margin: 2,
         color: { dark: "#000000", light: "#ffffff" },
         errorCorrectionLevel: "H",
-      }, (err) => {
-        if (err) {
-          console.error("QR generation failed:", err);
-          return;
-        }
-        const dataUrl = canvas.toDataURL("image/png");
+      } as any;
+      QRCode.toDataURL(profileUrl, options).then((dataUrl: string) => {
         const link = document.createElement("a");
         link.href = dataUrl;
         link.download = `${profile.username || "qrcode"}-qr.png`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      }).catch((err: any) => {
+        console.error("QR generation failed:", err);
       });
     }).catch(() => {
       alert("QR code generation not available");
