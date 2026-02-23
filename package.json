@@ -21,6 +21,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
     "@tensorflow/tfjs": "^4.22.0",
+    "@vercel/analytics": "^1.6.1",
     "encoding": "^0.1.13",
     "face-api.js": "^0.22.2",
     "lucide-react": "^0.569.0",

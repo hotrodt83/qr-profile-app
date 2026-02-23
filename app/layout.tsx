@@ -1,5 +1,6 @@
 // app/layout.tsx
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const siteDescription =
@@ -54,7 +55,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-black text-white" style={{ backgroundColor: "#000", color: "#fff" }}>{children}</body>
+      <body className="bg-black text-white" style={{ backgroundColor: "#000", color: "#fff" }}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
